@@ -1,0 +1,242 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Background: Very light beige/white for premium feel */
+    --background: 30 20% 98%;
+    /* Foreground: Charcoal #2A2A2A */
+    --foreground: 0 0% 16%;
+
+    /* Card: White or very light beige */
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 16%;
+
+    /* Popover: White */
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 16%;
+
+    /* Primary: Deep Mauve / Plum #6B3A6E -> 302 31% 33% */
+    --primary: 302 31% 33%;
+    --primary-foreground: 21 36% 86%;
+    /* Secondary as text on primary? Or white. Let's use Secondary #E8D7CE or White. White is safer for contrast. */
+    /* Actually user said Secondary is Blush Nude Beige #E8D7CE. 
+       Contrast of #E8D7CE on #6B3A6E is 7.6:1 (AAA). So it's good. */
+
+    /* Secondary: Blush Nude Beige #E8D7CE -> 21 36% 86% */
+    --secondary: 21 36% 86%;
+    --secondary-foreground: 302 31% 33%;
+    /* Primary as text on secondary */
+
+    /* Muted: Lighter version of secondary or neutral */
+    --muted: 21 20% 94%;
+    --muted-foreground: 0 0% 40%;
+
+    /* Accent: Rose Gold #B76E79 -> 351 33% 57% */
+    --accent: 351 33% 57%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Logo Green: Keep or adjust? Plan said "Likely keep". Leaving as is for now but maybe mute it. */
+    --logo-green: 142 70% 45%;
+    --logo-green-foreground: 0 0% 100%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 21 20% 88%;
+    --input: 21 20% 88%;
+    --ring: 302 31% 33%;
+    /* Primary for rings */
+
+    --radius: 0.25rem;
+
+    --sidebar-background: 30 20% 98%;
+    --sidebar-foreground: 0 0% 16%;
+    --sidebar-primary: 302 31% 33%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 21 36% 86%;
+    --sidebar-accent-foreground: 302 31% 33%;
+    --sidebar-border: 21 20% 88%;
+    --sidebar-ring: 302 31% 33%;
+  }
+
+  .dark {
+    /* Dark Mode: Deep Plum background? Or Dark Charcoal? 
+       User said "Replace all existing colors". 
+       Let's use a very dark version of the primary or neutral for dark mode background.
+       Dark Charcoal #1A1A1A */
+    --background: 0 0% 10%;
+    --foreground: 21 36% 86%;
+    /* Secondary text */
+
+    --card: 0 0% 13%;
+    --card-foreground: 21 36% 86%;
+
+    --popover: 0 0% 13%;
+    --popover-foreground: 21 36% 86%;
+
+    --primary: 302 31% 33%;
+    /* Keep primary same or lighten for dark mode? 
+       Usually lighten. Let's keep it for brand identity but maybe slightly lighter #8A4B8D -> 302 31% 42% */
+    --primary: 302 31% 42%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 21 36% 20%;
+    /* Darker version of secondary for dark mode elements */
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 0 0% 20%;
+    --muted-foreground: 21 20% 70%;
+
+    --accent: 351 33% 57%;
+    --accent-foreground: 0 0% 100%;
+
+    --logo-green: 142 70% 45%;
+    --logo-green-foreground: 0 0% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 302 31% 42%;
+
+    --sidebar-background: 0 0% 13%;
+    --sidebar-foreground: 21 36% 86%;
+    --sidebar-primary: 302 31% 42%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 21 36% 20%;
+    --sidebar-accent-foreground: 21 36% 86%;
+    --sidebar-border: 0 0% 20%;
+    --sidebar-ring: 302 31% 42%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', sans-serif;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: 'Playfair Display', serif;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: 'Playfair Display', serif;
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.6s ease-in-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px rgba(10, 15, 41, 0.15);
+  }
+
+  .gold-accent {
+    position: relative;
+  }
+
+  .gold-accent::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 2px;
+    background: hsl(var(--accent));
+  }
+
+  /* Glassmorphism Effects */
+  .glass {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 32px 0 rgba(107, 58, 110, 0.15);
+  }
+
+  .dark .glass {
+    background: rgba(20, 10, 20, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  }
+
+  .glass-card {
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 4px 24px 0 rgba(107, 58, 110, 0.1);
+  }
+
+  .dark .glass-card {
+    background: rgba(43, 46, 60, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 4px 24px 0 rgba(0, 0, 0, 0.25);
+  }
+
+  .glass-button {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(12px) saturate(160%);
+    -webkit-backdrop-filter: blur(12px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 2px 16px 0 rgba(107, 58, 110, 0.08);
+  }
+
+  .dark .glass-button {
+    background: rgba(43, 46, 60, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 2px 16px 0 rgba(0, 0, 0, 0.2);
+  }
+
+  .glass-hover {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .glass-hover:hover {
+    background: rgba(255, 255, 255, 0.85);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px 0 rgba(107, 58, 110, 0.2);
+  }
+
+  .dark .glass-hover:hover {
+    background: rgba(43, 46, 60, 0.75);
+    box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.35);
+  }
+}

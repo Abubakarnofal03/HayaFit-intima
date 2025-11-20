@@ -1,0 +1,7 @@
+project_id = "lpxrcdfygxmrsxauknbo"
+
+[functions.sync-meta-catalog]
+verify_jwt = true
+
+[functions.generate-tiktok-feed]
+verify_jwt = false
