@@ -3,25 +3,25 @@
 export const organizationSchema = {
   "@context": "https://schema.org",
   "@type": "Organization",
-  "name": "The Shopping Cart",
-  "alternateName": "TheShoppingCart.shop",
-  "url": "https://theshoppingcart.shop",
-  "logo": "https://theshoppingcart.shop/logo.jpg",
-  "description": "Pakistan's premier online store for home decor, wallets, furniture, accessories, and garden decorations. Quality products delivered across Pakistan.",
+  "name": "HayaFit Intima",
+  "alternateName": "hayafitintima.store",
+  "url": "https://hayafitintima.store",
+  "logo": "https://hayafitintima.store/logo.jpg",
+  "description": "Pakistan's premier online store for women's intimate wear, lingerie, bras, panties, nightwear, and intimate accessories. Premium quality products with discreet delivery across Pakistan.",
   "sameAs": [
-    "https://facebook.com/theshoppingcart",
-    "https://instagram.com/theshoppingcart"
+    "https://facebook.com/hayafitintima",
+    "https://instagram.com/hayafitintima"
   ]
 };
 
 export const websiteSchema = {
   "@context": "https://schema.org",
   "@type": "WebSite",
-  "name": "The Shopping Cart",
-  "url": "https://theshoppingcart.shop",
+  "name": "HayaFit Intima",
+  "url": "https://hayafitintima.store",
   "potentialAction": {
     "@type": "SearchAction",
-    "target": "https://theshoppingcart.shop/shop?search={search_term_string}",
+    "target": "https://hayafitintima.store/shop?search={search_term_string}",
     "query-input": "required name=search_term_string"
   }
 };
@@ -38,23 +38,23 @@ export const productSchema = (product: {
   "@type": "Product",
   "name": product.name,
   "description": product.description || product.name,
-  "image": product.images.map(img => img.startsWith('http') ? img : `https://theshoppingcart.shop${img}`),
+  "image": product.images.map(img => img.startsWith('http') ? img : `https://hayafitintima.store${img}`),
   "sku": product.sku || product.name,
   "brand": {
     "@type": "Brand",
-    "name": "The Shopping Cart"
+    "name": "HayaFit Intima"
   },
   "offers": {
     "@type": "Offer",
     "url": typeof window !== 'undefined' ? window.location.href : '',
     "priceCurrency": "PKR",
     "price": product.price,
-    "availability": product.stock_quantity && product.stock_quantity > 0 
-      ? "https://schema.org/InStock" 
+    "availability": product.stock_quantity && product.stock_quantity > 0
+      ? "https://schema.org/InStock"
       : "https://schema.org/OutOfStock",
     "seller": {
       "@type": "Organization",
-      "name": "The Shopping Cart"
+      "name": "HayaFit Intima"
     }
   }
 });
@@ -66,7 +66,7 @@ export const breadcrumbSchema = (items: { name: string; url: string }[]) => ({
     "@type": "ListItem",
     "position": index + 1,
     "name": item.name,
-    "item": item.url.startsWith('http') ? item.url : `https://theshoppingcart.shop${item.url}`
+    "item": item.url.startsWith('http') ? item.url : `https://hayafitintima.store${item.url}`
   }))
 });
 
@@ -87,14 +87,14 @@ export const blogPostSchema = (post: {
   },
   "publisher": {
     "@type": "Organization",
-    "name": "The Shopping Cart",
+    "name": "HayaFit Intima",
     "logo": {
       "@type": "ImageObject",
-      "url": "https://theshoppingcart.shop/logo.jpg"
+      "url": "https://hayafitintima.store/logo.jpg"
     }
   },
   "datePublished": post.created_at,
-  "image": post.featured_image_url 
-    ? (post.featured_image_url.startsWith('http') ? post.featured_image_url : `https://theshoppingcart.shop${post.featured_image_url}`)
-    : "https://theshoppingcart.shop/logo.jpg"
+  "image": post.featured_image_url
+    ? (post.featured_image_url.startsWith('http') ? post.featured_image_url : `https://hayafitintima.store${post.featured_image_url}`)
+    : "https://hayafitintima.store/logo.jpg"
 });

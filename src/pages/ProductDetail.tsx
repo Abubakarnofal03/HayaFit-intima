@@ -424,8 +424,8 @@ const ProductDetail = ({ key }: { key?: string }) => {
                       key={index}
                       onClick={() => setSelectedImageIndex(index)}
                       className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${selectedImageIndex === index
-                          ? "border-primary ring-1 ring-primary ring-offset-1"
-                          : "border-transparent hover:border-primary/50"
+                        ? "border-primary ring-1 ring-primary ring-offset-1"
+                        : "border-transparent hover:border-primary/50"
                         }`}
                     >
                       <img
@@ -506,8 +506,8 @@ const ProductDetail = ({ key }: { key?: string }) => {
                               setSelectedVariation(v);
                             }}
                             className={`min-w-[4rem] px-4 py-2 text-sm border rounded-sm transition-all ${selectedVariation?.id === v.id
-                                ? "border-primary bg-primary text-primary-foreground shadow-md"
-                                : "border-input hover:border-primary/50 hover:bg-accent"
+                              ? "border-primary bg-primary text-primary-foreground shadow-md"
+                              : "border-input hover:border-primary/50 hover:bg-accent"
                               }`}
                           >
                             {v.name}
@@ -529,8 +529,8 @@ const ProductDetail = ({ key }: { key?: string }) => {
                             key={c.id}
                             onClick={() => setSelectedColor(c)}
                             className={`w-10 h-10 rounded-full border-2 transition-all ${selectedColor?.id === c.id
-                                ? "border-primary ring-1 ring-primary ring-offset-2 scale-110"
-                                : "border-transparent hover:scale-105"
+                              ? "border-primary ring-1 ring-primary ring-offset-2 scale-110"
+                              : "border-transparent hover:scale-105"
                               }`}
                             style={{ backgroundColor: c.color_code }}
                             title={c.name}

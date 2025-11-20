@@ -13,17 +13,17 @@ export const Footer = () => {
         {/* SEO-rich footer text */}
         <div className="text-center mb-8 max-w-3xl mx-auto">
           <p className="text-sm text-muted-foreground">
-            <strong>theshoppingcart.shop</strong> is your premier online shopping destination in Pakistan for 
-            premium <strong>home decor</strong>, elegant <strong>wallets</strong>, stylish <strong>furniture</strong>, 
-            quality <strong>accessories</strong>, and beautiful <strong>garden decorations</strong>. 
-            Shop with confidence and enjoy fast delivery nationwide.
+            <strong>hayafitintima.store</strong> is your premier online shopping destination in Pakistan for
+            premium <strong>women's lingerie</strong>, elegant <strong>bras</strong>, comfortable <strong>panties</strong>,
+            quality <strong>nightwear</strong>, and <strong>intimate accessories</strong>.
+            Shop with confidence and enjoy discreet delivery nationwide.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <img src={logo} alt="The Shopping Cart - Online Shopping in Pakistan" className="h-16 w-auto mb-4" />
-            <p className="text-sm mb-4">Premium lifestyle products for the discerning customer.</p>
+            <img src={logo} alt="HayaFit Intima - Women's Intimate Wear in Pakistan" className="h-16 w-auto mb-4" />
+            <p className="text-sm mb-4">Premium intimate wear and lingerie for every woman.</p>
             <div className="flex space-x-4">
               <a href="https://www.facebook.com/share/1EgybenFiL/" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors" aria-label="Visit our Facebook page">
                 <Facebook className="h-5 w-5" />
@@ -61,7 +61,7 @@ export const Footer = () => {
           </div>
         </div>
         <div className="border-t border-primary-foreground/20 mt-8 pt-8 text-center text-sm">
-          <p>&copy; 2025 The Shopping Cart. All rights reserved.</p>
+          <p>&copy; 2025 HayaFit Intima. All rights reserved.</p>
         </div>
       </div>
     </footer>
