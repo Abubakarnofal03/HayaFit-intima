@@ -21,7 +21,7 @@ export default function BlogPost() {
         .eq('slug', slug)
         .eq('published', true)
         .maybeSingle();
-      
+
       if (error) throw error;
       return data;
     },
@@ -78,15 +78,15 @@ export default function BlogPost() {
         title={post.meta_title || `${post.title} | The Shopping Cart Blog`}
         description={post.meta_description || post.excerpt || post.title}
         keywords={post.focus_keywords || []}
-        canonicalUrl={`https://theshoppingcart.shop/blog/${post.slug}`}
+        canonicalUrl={`https://hayafitintima.store/blog/${post.slug}`}
         ogImage={post.featured_image_url}
         ogType="article"
         structuredData={structuredData}
       />
-      
+
       <div className="min-h-screen bg-background">
         <Navbar />
-        
+
         <article className="container mx-auto px-4 py-8 max-w-4xl">
           <Link to="/blog">
             <Button variant="ghost" className="mb-6">
@@ -118,7 +118,7 @@ export default function BlogPost() {
             />
           )}
 
-          <div 
+          <div
             className="prose prose-lg max-w-none"
             dangerouslySetInnerHTML={{ __html: post.content }}
           />

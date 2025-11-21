@@ -23,7 +23,7 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     console.log('Fetching products from database...');
-    
+
     const { data: products, error: productsError } = await supabase
       .from('products')
       .select('id, name, description, price, stock_quantity, images, categories(name)')
@@ -36,8 +36,8 @@ Deno.serve(async (req) => {
 
     if (!products || products.length === 0) {
       return new Response(
-        JSON.stringify({ 
-          success: true, 
+        JSON.stringify({
+          success: true,
           message: 'No products to sync',
           synced: 0
         }),
@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
       data: {
         name: product.name,
         description: product.description || '',
-        url: `https://theshoppingcart.shop/product/${product.id}`,
+        url: `https://hayafitintima.store/product/${product.id}`,
         image_url: product.images && product.images.length > 0 ? product.images[0] : '',
         availability: product.stock_quantity > 0 ? 'in stock' : 'out of stock',
         condition: 'new',
@@ -102,8 +102,8 @@ Deno.serve(async (req) => {
     console.log(`Successfully synced ${successCount} products`);
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
+      JSON.stringify({
+        success: true,
         message: `Successfully synced ${successCount} products to Meta Catalog`,
         synced: successCount,
         total: products.length,
@@ -115,14 +115,14 @@ Deno.serve(async (req) => {
   } catch (error: any) {
     console.error('Error in sync-meta-catalog:', error);
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         success: false,
         error: error.message,
         details: error.toString()
       }),
-      { 
+      {
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
   }

@@ -17,7 +17,7 @@ export default function Blog() {
         .select('*')
         .eq('published', true)
         .order('created_at', { ascending: false });
-      
+
       if (error) throw error;
       return data;
     },
@@ -39,7 +39,7 @@ export default function Blog() {
     <>
       <SEOHead
         title="Blog - Home Decor Tips & Shopping Guide | The Shopping Cart"
-        description="Read expert tips on home decor, furniture selection, wallet care, and shopping guides. Stay updated with the latest trends at TheShoppingCart.shop"
+        description="Read expert tips on home decor, furniture selection, wallet care, and shopping guides. Stay updated with the latest trends at hayafitintima.store"
         keywords={[
           'home decor blog',
           'furniture tips',
@@ -48,18 +48,18 @@ export default function Blog() {
           'wallet guide',
           'interior design Pakistan'
         ]}
-        canonicalUrl="https://theshoppingcart.shop/blog"
+        canonicalUrl="https://hayafitintima.store/blog"
         structuredData={structuredData}
       />
-      
+
       <div className="min-h-screen bg-background">
         <Navbar />
-        
+
         <main className="container mx-auto px-4 py-8">
           <header className="text-center mb-12">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">Our Blog</h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Discover expert tips, trends, and guides for home decor, furniture, wallets, and more. 
+              Discover expert tips, trends, and guides for home decor, furniture, wallets, and more.
               Stay inspired with The Shopping Cart.
             </p>
           </header>

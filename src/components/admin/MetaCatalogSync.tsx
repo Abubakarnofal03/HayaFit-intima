@@ -14,10 +14,10 @@ export const MetaCatalogSync = () => {
 
   const handleSync = async () => {
     setIsLoading(true);
-    
+
     try {
       console.log('Initiating Meta Catalog sync...');
-      
+
       const { data, error } = await supabase.functions.invoke('sync-meta-catalog', {
         body: {},
       });
@@ -35,7 +35,7 @@ export const MetaCatalogSync = () => {
           success: true,
           message: data.message || `Synced ${data.synced} of ${data.total} products`,
         });
-        
+
         toast({
           title: "Sync Successful",
           description: data.message,
@@ -46,13 +46,13 @@ export const MetaCatalogSync = () => {
 
     } catch (error: any) {
       console.error('Sync error:', error);
-      
+
       setLastSync({
         timestamp: new Date(),
         success: false,
         message: error.message || 'Failed to sync products',
       });
-      
+
       toast({
         title: "Sync Failed",
         description: error.message || 'Failed to sync products to Meta Catalog',
@@ -76,8 +76,8 @@ export const MetaCatalogSync = () => {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex flex-col sm:flex-row gap-4">
-          <Button 
-            onClick={handleSync} 
+          <Button
+            onClick={handleSync}
             disabled={isLoading}
             size="lg"
             className="flex-1"
@@ -94,15 +94,15 @@ export const MetaCatalogSync = () => {
               </>
             )}
           </Button>
-          
-          <Button 
-            variant="outline" 
+
+          <Button
+            variant="outline"
             size="lg"
             asChild
           >
-            <a 
-              href="https://business.facebook.com/commerce/" 
-              target="_blank" 
+            <a
+              href="https://business.facebook.com/commerce/"
+              target="_blank"
               rel="noopener noreferrer"
               className="flex items-center"
             >
@@ -149,7 +149,7 @@ export const MetaCatalogSync = () => {
           <h4 className="font-semibold">Configuration:</h4>
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div className="text-muted-foreground">Store Domain:</div>
-            <div className="font-mono">theshoppingcart.shop</div>
+            <div className="font-mono">hayafitintima.store</div>
             <div className="text-muted-foreground">Brand Name:</div>
             <div>The Shopping Cart</div>
             <div className="text-muted-foreground">Currency:</div>

@@ -67,7 +67,7 @@ INSERT INTO public.blogs (title, slug, content, excerpt, meta_title, meta_descri
   '<h2>Find Your Perfect Wallet</h2><p>Choosing the right wallet is more than just style - it''s about functionality, durability, and personal expression. Our 2025 guide covers everything you need to know.</p><h3>Men''s Wallets</h3><p>From classic bifolds to modern minimalist designs, explore the best men''s wallets available online in Pakistan...</p><h3>Women''s Wallets</h3><p>Elegant, practical, and stylish - find women''s wallets that complement any outfit...</p><h3>Materials Matter</h3><p>Genuine leather vs synthetic - what''s best for you?</p>',
   'Complete guide to choosing the best wallets for men and women in 2025. Compare styles, materials, and find your perfect wallet at The Shopping Cart.',
   'Best Wallets for Men & Women – 2025 Guide | The Shopping Cart',
-  'Expert guide to the best wallets for men and women in 2025. Shop premium leather wallets online in Pakistan with fast delivery at TheShoppingCart.shop.',
+  'Expert guide to the best wallets for men and women in 2025. Shop premium leather wallets online in Pakistan with fast delivery at hayafitintima.store.',
   ARRAY['wallets', 'men wallets', 'women wallets', 'leather wallets', 'buy wallets online', 'Pakistan'],
   true,
   '/placeholder.svg'
@@ -76,9 +76,9 @@ INSERT INTO public.blogs (title, slug, content, excerpt, meta_title, meta_descri
   'Affordable Furniture & Garden Decorations Online in Pakistan',
   'affordable-furniture-garden-decorations-pakistan',
   '<h2>Shop Premium Yet Affordable Home & Garden Items</h2><p>Looking for quality furniture and garden decorations without breaking the bank? The Shopping Cart brings you the best deals on premium home and outdoor decor.</p><h3>Furniture for Every Room</h3><p>From bedroom sets to living room sofas, find affordable furniture that doesn''t compromise on quality...</p><h3>Garden & Outdoor Decor</h3><p>Transform your outdoor spaces with beautiful garden decorations, planters, and accessories...</p><h3>Why Shop Online?</h3><p>Convenience, better prices, and delivery to your doorstep across Pakistan.</p>',
-  'Shop affordable furniture and garden decorations online in Pakistan. Quality home decor and outdoor accessories delivered fast. TheShoppingCart.shop',
+  'Shop affordable furniture and garden decorations online in Pakistan. Quality home decor and outdoor accessories delivered fast. hayafitintima.store',
   'Affordable Furniture & Garden Decorations | The Shopping Cart',
-  'Buy affordable furniture and garden decorations online in Pakistan. Premium quality, fast delivery across Pakistan. Shop now at TheShoppingCart.shop.',
+  'Buy affordable furniture and garden decorations online in Pakistan. Premium quality, fast delivery across Pakistan. Shop now at hayafitintima.store.',
   ARRAY['affordable furniture', 'garden decorations', 'online shopping Pakistan', 'home decor', 'outdoor accessories', 'furniture online'],
   true,
   '/placeholder.svg'

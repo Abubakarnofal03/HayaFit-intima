@@ -14,10 +14,10 @@ export const TikTokFeedGenerator = () => {
 
   const handleGenerate = async () => {
     setIsGenerating(true);
-    
+
     try {
       console.log('Generating TikTok feed...');
-      
+
       const { data, error } = await supabase.functions.invoke('generate-tiktok-feed', {
         body: {},
       });
@@ -30,14 +30,14 @@ export const TikTokFeedGenerator = () => {
       // Create blob from TSV data
       const blob = new Blob([data], { type: 'text/tab-separated-values' });
       const url = window.URL.createObjectURL(blob);
-      
+
       // Create download link
       const a = document.createElement('a');
       a.href = url;
       a.download = `tiktok-catalog-feed-${new Date().toISOString().split('T')[0]}.tsv`;
       document.body.appendChild(a);
       a.click();
-      
+
       // Cleanup
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
@@ -50,7 +50,7 @@ export const TikTokFeedGenerator = () => {
         timestamp: new Date(),
         productCount,
       });
-      
+
       toast({
         title: "Feed Generated Successfully",
         description: `Downloaded feed with ${productCount} products`,
@@ -58,7 +58,7 @@ export const TikTokFeedGenerator = () => {
 
     } catch (error: any) {
       console.error('Generate error:', error);
-      
+
       toast({
         title: "Generation Failed",
         description: error.message || 'Failed to generate TikTok feed',
@@ -82,8 +82,8 @@ export const TikTokFeedGenerator = () => {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex flex-col sm:flex-row gap-4">
-          <Button 
-            onClick={handleGenerate} 
+          <Button
+            onClick={handleGenerate}
             disabled={isGenerating}
             size="lg"
             className="flex-1"
@@ -100,15 +100,15 @@ export const TikTokFeedGenerator = () => {
               </>
             )}
           </Button>
-          
-          <Button 
-            variant="outline" 
+
+          <Button
+            variant="outline"
             size="lg"
             asChild
           >
-            <a 
-              href="https://ads.tiktok.com/i18n/dashboard" 
-              target="_blank" 
+            <a
+              href="https://ads.tiktok.com/i18n/dashboard"
+              target="_blank"
               rel="noopener noreferrer"
               className="flex items-center"
             >
@@ -163,7 +163,7 @@ export const TikTokFeedGenerator = () => {
           <h4 className="font-semibold">Configuration:</h4>
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div className="text-muted-foreground">Store Domain:</div>
-            <div className="font-mono">theshoppingcart.shop</div>
+            <div className="font-mono">hayafitintima.store</div>
             <div className="text-muted-foreground">Brand Name:</div>
             <div>The Shopping Cart</div>
             <div className="text-muted-foreground">Currency:</div>

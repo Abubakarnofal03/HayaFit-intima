@@ -1,1 +1,1 @@
-welcome to our ecommerce store www.theshoppingcart.shop
+welcome to our ecommerce store www.hayafitintima.store

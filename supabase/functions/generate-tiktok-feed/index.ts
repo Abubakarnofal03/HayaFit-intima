@@ -50,7 +50,7 @@ serve(async (req) => {
 
     console.log(`Found ${products?.length || 0} products`);
 
-    const storeDomain = "theshoppingcart.shop";
+    const storeDomain = "hayafitintima.store";
     const brandName = "The Shopping Cart";
     const currency = "PKR";
 
@@ -77,7 +77,7 @@ serve(async (req) => {
       const productUrl = `https://${storeDomain}/product/${product.slug}`;
       const mainImage = product.images?.[0] || '';
       const additionalImages = product.images?.slice(1, 4).join(',') || '';
-      
+
       // Clean description (remove newlines and tabs for TSV)
       const cleanDescription = (product.description || '')
         .replace(/[\t\n\r]/g, ' ')
