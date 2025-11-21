@@ -274,8 +274,8 @@ const Shop = () => {
 
   const selectedCategoryData = categories?.find(c => c.slug === selectedCategory);
   const pageTitle = selectedCategoryData
-    ? `Shop ${selectedCategoryData.name} Online | The Shopping Cart`
-    : "Shop All Products Online | The Shopping Cart";
+    ? `Shop ${selectedCategoryData.name} Online | HayaFit Intima`
+    : "Shop All Products Online | HayaFit Intima";
   const pageDescription = selectedCategoryData
     ? `Browse premium ${selectedCategoryData.name.toLowerCase()} online in Pakistan. Quality products, fast delivery at hayafitintima.store`
     : "Discover premium home decor, wallets, accessories, and furniture at hayafitintima.store – fast delivery across Pakistan.";

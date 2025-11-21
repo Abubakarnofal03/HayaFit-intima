@@ -151,7 +151,7 @@ export const MetaCatalogSync = () => {
             <div className="text-muted-foreground">Store Domain:</div>
             <div className="font-mono">hayafitintima.store</div>
             <div className="text-muted-foreground">Brand Name:</div>
-            <div>The Shopping Cart</div>
+            <div>HayaFit Intima</div>
             <div className="text-muted-foreground">Currency:</div>
             <div>PKR</div>
           </div>

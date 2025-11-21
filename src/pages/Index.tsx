@@ -112,7 +112,7 @@ const Index = () => {
   return (
     <>
       <SEOHead
-        title="The Shopping Cart – Pakistan's Online Store for Home Decor, Wallets & More"
+        title="HayaFit Intima – Pakistan's Online Store for Home Decor, Wallets & More"
         description="Shop premium home decor, wallets, furniture, accessories & garden decorations online in Pakistan. Fast delivery, quality products at hayafitintima.store"
         keywords={[
           'home decor',
@@ -121,7 +121,7 @@ const Index = () => {
           'accessories',
           'garden decorations',
           'shopping cart',
-          'the shopping cart',
+          'HayaFit Intima',
           'hayafitintima.store',
           'buy online in Pakistan',
           'premium decor items',
@@ -143,8 +143,8 @@ const Index = () => {
               <div
                 key={banner.id}
                 className={`absolute inset-0 bg-cover bg-center transition-all duration-1000 ease-in-out ${index === currentBannerIndex
-                    ? 'opacity-100 scale-100'
-                    : 'opacity-0 scale-105'
+                  ? 'opacity-100 scale-100'
+                  : 'opacity-0 scale-105'
                   }`}
                 style={{ backgroundImage: `url(${banner.image_url})` }}
               >
@@ -181,8 +181,8 @@ const Index = () => {
                     key={index}
                     onClick={() => setCurrentBannerIndex(index)}
                     className={`h-2 sm:h-3 rounded-full transition-all duration-300 ${index === currentBannerIndex
-                        ? 'bg-accent w-6 sm:w-8'
-                        : 'bg-white/50 hover:bg-white/75 w-2 sm:w-3'
+                      ? 'bg-accent w-6 sm:w-8'
+                      : 'bg-white/50 hover:bg-white/75 w-2 sm:w-3'
                       }`}
                     aria-label={`Go to banner ${index + 1}`}
                   />
@@ -195,7 +195,7 @@ const Index = () => {
           {/* <section className="py-12 bg-background">
           <div className="container mx-auto px-4 max-w-4xl text-center">
             {/* <p className="text-lg text-muted-foreground leading-relaxed">
-              Welcome to <strong>The Shopping Cart</strong> – your trusted online destination for premium <strong>home decor</strong>, 
+              Welcome to <strong>HayaFit Intima</strong> – your trusted online destination for premium <strong>home decor</strong>, 
               elegant <strong>wallets</strong>, stylish <strong>furniture</strong>, quality <strong>accessories</strong>, and beautiful 
               <strong> garden decorations</strong> in Pakistan. Shop with confidence and enjoy fast delivery across the country. 
               hayafitintima.store brings you carefully curated products that blend style, quality, and affordability.
@@ -214,8 +214,8 @@ const Index = () => {
 
             <div className="container mx-auto px-4 relative z-10">
               <div className={`text-center mb-12 transition-all duration-700 ${visibleSections.has('categories-section')
-                  ? 'opacity-100 translate-y-0'
-                  : 'opacity-0 translate-y-10'
+                ? 'opacity-100 translate-y-0'
+                : 'opacity-0 translate-y-10'
                 }`}>
                 <h2 className="font-display text-3xl md:text-4xl font-bold mb-4 gold-accent pb-8">
                   Shop Home Decor, Wallets, Accessories & More
@@ -231,8 +231,8 @@ const Index = () => {
                     key={category.id}
                     to={`/shop?category=${category.slug}`}
                     className={`group transition-all duration-500 ${visibleSections.has('categories-section')
-                        ? 'opacity-100 translate-y-0'
-                        : 'opacity-0 translate-y-10'
+                      ? 'opacity-100 translate-y-0'
+                      : 'opacity-0 translate-y-10'
                       }`}
                     style={{ transitionDelay: `${index * 150}ms` }}
                   >
@@ -283,8 +283,8 @@ const Index = () => {
                   <Card
                     key={index}
                     className={`glass-card glass-hover rounded-xl transition-all duration-500 ${visibleSections.has('trust-section')
-                        ? 'opacity-100 translate-y-0'
-                        : 'opacity-0 translate-y-10'
+                      ? 'opacity-100 translate-y-0'
+                      : 'opacity-0 translate-y-10'
                       }`}
                     style={{ transitionDelay: `${index * 100}ms` }}
                   >
@@ -313,8 +313,8 @@ const Index = () => {
 
             <div className="container mx-auto px-4 relative z-10">
               <div className={`text-center mb-12 transition-all duration-700 ${visibleSections.has('products-section')
-                  ? 'opacity-100 translate-y-0'
-                  : 'opacity-0 translate-y-10'
+                ? 'opacity-100 translate-y-0'
+                : 'opacity-0 translate-y-10'
                 }`}>
                 <h2 className="font-display text-3xl md:text-4xl font-bold mb-4 gold-accent pb-8">
                   Featured Products - Best Sellers
@@ -335,8 +335,8 @@ const Index = () => {
                       key={product.id}
                       to={`/product/${product.slug}`}
                       className={`w-full sm:w-[calc(50%-0.75rem)] lg:w-[calc(25%-1.125rem)] min-w-[280px] max-w-[400px] transition-all duration-500 ${visibleSections.has('products-section')
-                          ? 'opacity-100 translate-y-0'
-                          : 'opacity-0 translate-y-10'
+                        ? 'opacity-100 translate-y-0'
+                        : 'opacity-0 translate-y-10'
                         }`}
                       style={{ transitionDelay: `${index * 100}ms` }}
                     >
@@ -397,8 +397,8 @@ const Index = () => {
               </div>
 
               <div className={`text-center mt-12 transition-all duration-700 ${visibleSections.has('products-section')
-                  ? 'opacity-100 translate-y-0'
-                  : 'opacity-0 translate-y-10'
+                ? 'opacity-100 translate-y-0'
+                : 'opacity-0 translate-y-10'
                 }`} style={{ transitionDelay: '600ms' }}>
                 <Button asChild variant="outline" size="lg" className="hover:scale-105 transition-transform">
                   <Link to="/shop">

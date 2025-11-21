@@ -75,7 +75,7 @@ export default function BlogPost() {
   return (
     <>
       <SEOHead
-        title={post.meta_title || `${post.title} | The Shopping Cart Blog`}
+        title={post.meta_title || `${post.title} | HayaFit Intima Blog`}
         description={post.meta_description || post.excerpt || post.title}
         keywords={post.focus_keywords || []}
         canonicalUrl={`https://hayafitintima.store/blog/${post.slug}`}

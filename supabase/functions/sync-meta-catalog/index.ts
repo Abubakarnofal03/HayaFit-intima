@@ -59,7 +59,7 @@ Deno.serve(async (req) => {
         condition: 'new',
         price: parseFloat(product.price),
         currency: 'PKR',
-        brand: 'The Shopping Cart',
+        brand: 'HayaFit Intima',
         category: product.categories?.name || 'General',
       },
     }));

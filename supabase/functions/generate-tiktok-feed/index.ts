@@ -51,7 +51,7 @@ serve(async (req) => {
     console.log(`Found ${products?.length || 0} products`);
 
     const storeDomain = "hayafitintima.store";
-    const brandName = "The Shopping Cart";
+    const brandName = "HayaFit Intima";
     const currency = "PKR";
 
     // TSV Header
