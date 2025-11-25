@@ -29,6 +29,7 @@ const ProductDetail = ({ key }: { key?: string }) => {
   const [user, setUser] = useState<any>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [zoomDialogOpen, setZoomDialogOpen] = useState(false);
+  const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
   const [selectedVariation, setSelectedVariation] = useState<any>(null);
   const [selectedColor, setSelectedColor] = useState<any>(null);
   const [showStickyBar, setShowStickyBar] = useState(false);
@@ -375,7 +376,7 @@ const ProductDetail = ({ key }: { key?: string }) => {
             {/* Left Column: Media Gallery */}
             <div className="lg:col-span-7 space-y-6">
               {/* Main Image/Carousel */}
-              <div className="relative rounded-xl overflow-hidden bg-secondary/10 border border-border/50 shadow-sm group">
+              <div className="relative rounded-xl overflow-hidden bg-secondary/10 border border-border/50 shadow-sm group animate-in fade-in slide-in-from-bottom-4 duration-700">
                 {product.is_video && product.video_url ? (
                   <video
                     src={product.video_url}
@@ -387,33 +388,45 @@ const ProductDetail = ({ key }: { key?: string }) => {
                     playsInline
                   />
                 ) : (
-                  <div
-                    className="relative aspect-[4/5] md:aspect-square lg:aspect-[4/5] cursor-zoom-in overflow-hidden"
-                    onClick={() => setZoomDialogOpen(true)}
-                  >
-                    {productImages[selectedImageIndex] && (
-                      <img
-                        src={productImages[selectedImageIndex]}
-                        alt={product.name}
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                      />
-                    )}
-
-                    {/* Badges */}
-                    <div className="absolute top-4 left-4 flex flex-col gap-2">
-                      {discount && (
-                        <Badge className="bg-destructive text-destructive-foreground rounded-none px-3 py-1 text-sm font-bold shadow-md">
-                          -{discount}% OFF
-                        </Badge>
-                      )}
-                      {product.stock_quantity > 0 && product.stock_quantity < 5 && (
-                        <Badge className="bg-orange-500 text-white rounded-none px-3 py-1 text-sm font-bold shadow-md">
-                          Low Stock
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
+                  <Carousel className="w-full" setApi={(api) => {
+                    api?.on("select", () => {
+                      setSelectedImageIndex(api.selectedScrollSnap());
+                    });
+                  }}>
+                    <CarouselContent>
+                      {productImages.map((img: string, index: number) => (
+                        <CarouselItem key={index}>
+                          <div
+                            className="relative aspect-[4/5] md:aspect-square lg:aspect-[4/5] cursor-zoom-in overflow-hidden flex items-center justify-center bg-secondary/5"
+                            onClick={() => setZoomDialogOpen(true)}
+                          >
+                            <img
+                              src={img}
+                              alt={`${product.name} - View ${index + 1}`}
+                              className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-105"
+                            />
+                          </div>
+                        </CarouselItem>
+                      ))}
+                    </CarouselContent>
+                    <CarouselPrevious className="left-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <CarouselNext className="right-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </Carousel>
                 )}
+
+                {/* Badges */}
+                <div className="absolute top-4 left-4 flex flex-col gap-2 pointer-events-none">
+                  {discount && (
+                    <Badge className="bg-destructive text-destructive-foreground rounded-none px-3 py-1 text-sm font-bold shadow-md">
+                      -{discount}% OFF
+                    </Badge>
+                  )}
+                  {product.stock_quantity > 0 && product.stock_quantity < 5 && (
+                    <Badge className="bg-orange-500 text-white rounded-none px-3 py-1 text-sm font-bold shadow-md">
+                      Low Stock
+                    </Badge>
+                  )}
+                </div>
               </div>
 
               {/* Thumbnails */}
@@ -440,7 +453,7 @@ const ProductDetail = ({ key }: { key?: string }) => {
             </div>
 
             {/* Right Column: Product Info */}
-            <div className="lg:col-span-5 space-y-8">
+            <div className="lg:col-span-5 space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
               <div className="sticky top-24 space-y-8">
                 {/* Header */}
                 <div className="space-y-4">
@@ -494,7 +507,11 @@ const ProductDetail = ({ key }: { key?: string }) => {
                         <label className="text-sm font-semibold text-foreground">
                           Select Size / Variation
                         </label>
-                        <Button variant="link" className="h-auto p-0 text-xs text-primary">
+                        <Button
+                          variant="link"
+                          className="h-auto p-0 text-xs text-primary"
+                          onClick={() => setSizeGuideOpen(true)}
+                        >
                           Size Guide
                         </Button>
                       </div>
@@ -628,7 +645,7 @@ const ProductDetail = ({ key }: { key?: string }) => {
                 <div className="pt-6 space-y-4">
                   <h3 className="font-display text-xl font-semibold">About this item</h3>
                   <div
-                    className="prose prose-sm text-muted-foreground leading-relaxed"
+                    className="prose prose-sm text-muted-foreground leading-relaxed whitespace-pre-wrap"
                     dangerouslySetInnerHTML={{ __html: product.description || product.name }}
                   />
                 </div>
@@ -774,16 +791,50 @@ const ProductDetail = ({ key }: { key?: string }) => {
         </DialogContent>
       </Dialog>
 
+      {/* Size Guide Dialog */}
+      <Dialog open={sizeGuideOpen} onOpenChange={setSizeGuideOpen}>
+        <DialogContent className="max-w-3xl w-full p-0 overflow-hidden">
+          <div className="relative w-full h-full flex flex-col">
+            <div className="p-4 border-b flex items-center justify-between bg-secondary/10">
+              <h3 className="font-display text-lg font-bold">Size Guide</h3>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-full hover:bg-background/80"
+                onClick={() => setSizeGuideOpen(false)}
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+            <div className="p-6 overflow-y-auto max-h-[80vh]">
+              <img
+                src="/size-guide-chart.png"
+                alt="Size Guide Chart"
+                className="w-full h-auto object-contain rounded-md"
+              />
+              <div className="mt-6 space-y-4 text-sm text-muted-foreground">
+                <h4 className="font-semibold text-foreground">How to Measure</h4>
+                <ul className="list-disc pl-5 space-y-2">
+                  <li><strong>Bust:</strong> Measure around the fullest part of your bust.</li>
+                  <li><strong>Waist:</strong> Measure around your natural waistline, keeping the tape comfortably loose.</li>
+                  <li><strong>Hips:</strong> Measure around the fullest part of your hips.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Sticky Mobile Bar */}
       {showStickyBar && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-md border-t shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] animate-in slide-in-from-bottom duration-300 md:hidden">
-          <div className="p-4 flex items-center gap-3">
-            <div className="flex-1">
-              <p className="text-sm font-medium truncate">{product.name}</p>
-              <p className="text-lg font-bold text-primary">{formatPrice(finalPrice)}</p>
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-md border-t shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] animate-in slide-in-from-bottom duration-300 md:hidden pb-safe">
+          <div className="p-3 flex items-center gap-2 max-w-full overflow-hidden">
+            <div className="flex-1 min-w-0 flex flex-col justify-center">
+              <p className="text-xs font-medium truncate w-full">{product.name}</p>
+              <p className="text-base font-bold text-primary leading-tight">{formatPrice(finalPrice)}</p>
             </div>
             <Button
-              className="flex-1 btn-liquid-primary font-bold shadow-lg"
+              className="flex-none px-6 btn-liquid-primary font-bold shadow-lg text-sm h-10"
               onClick={handleBuyNow}
             >
               Buy Now

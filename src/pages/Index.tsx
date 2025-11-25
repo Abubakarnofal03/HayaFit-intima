@@ -112,22 +112,22 @@ const Index = () => {
   return (
     <>
       <SEOHead
-        title="HayaFit Intima – Pakistan's Online Store for Home Decor, Wallets & More"
-        description="Shop premium home decor, wallets, furniture, accessories & garden decorations online in Pakistan. Fast delivery, quality products at hayafitintima.store"
+        title="HayaFit Intima – Premium Lingerie & Intimate Wear in Pakistan"
+        description="Shop premium lingerie, bras, panties, nightwear & accessories online in Pakistan. Fast delivery, quality products at hayafitintima.store"
         keywords={[
-          'home decor',
-          'wallets',
-          'furniture',
-          'accessories',
-          'garden decorations',
+          'lingerie',
+          'bras',
+          'panties',
+          'nightwear',
+          'women accessories',
           'shopping cart',
           'HayaFit Intima',
           'hayafitintima.store',
           'buy online in Pakistan',
-          'premium decor items',
+          'premium intimate wear',
           'online shopping Pakistan',
-          'home accessories',
-          'leather wallets'
+          'women fashion',
+          'undergarments'
         ]}
         canonicalUrl="https://hayafitintima.store"
         structuredData={structuredData}
@@ -191,18 +191,6 @@ const Index = () => {
             )}
           </section>
 
-          {/* Introduction Section for SEO */}
-          {/* <section className="py-12 bg-background">
-          <div className="container mx-auto px-4 max-w-4xl text-center">
-            {/* <p className="text-lg text-muted-foreground leading-relaxed">
-              Welcome to <strong>HayaFit Intima</strong> – your trusted online destination for premium <strong>home decor</strong>, 
-              elegant <strong>wallets</strong>, stylish <strong>furniture</strong>, quality <strong>accessories</strong>, and beautiful 
-              <strong> garden decorations</strong> in Pakistan. Shop with confidence and enjoy fast delivery across the country. 
-              hayafitintima.store brings you carefully curated products that blend style, quality, and affordability.
-            </p> 
-          </div>
-        </section> */}
-
           {/* Shop by Category - Dynamic */}
           <section
             id="categories-section"
@@ -218,10 +206,10 @@ const Index = () => {
                 : 'opacity-0 translate-y-10'
                 }`}>
                 <h2 className="font-display text-3xl md:text-4xl font-bold mb-4 gold-accent pb-8">
-                  Shop Home Decor, Wallets, Accessories & More
+                  Shop Premium Lingerie, Sleepwear & Accessories
                 </h2>
                 <p className="text-muted-foreground max-w-2xl mx-auto">
-                  Explore our curated collections of premium products
+                  Explore our curated collections of intimate wear designed for comfort and elegance
                 </p>
               </div>
 
@@ -320,7 +308,7 @@ const Index = () => {
                   Featured Products - Best Sellers
                 </h2>
                 <p className="text-muted-foreground max-w-2xl mx-auto">
-                  Handpicked premium home decor, wallets, and accessories for the discerning customer
+                  Handpicked premium intimate wear for the discerning woman
                 </p>
               </div>
 
