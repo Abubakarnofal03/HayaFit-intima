@@ -39,7 +39,7 @@ const Checkout = () => {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
-      
+
       if (!session) {
         setGuestCart(getGuestCart());
       } else {
@@ -64,10 +64,10 @@ const Checkout = () => {
       }
       setIsCheckingSession(false);
     });
-    
+
     // Track Meta Pixel InitiateCheckout event when user lands on checkout page
     trackMetaInitiateCheckout();
-    
+
     // Track analytics checkout start event
     trackEvent('checkout_start');
   }, []);
@@ -95,34 +95,41 @@ const Checkout = () => {
         .select('*')
         .eq('is_active', true)
         .gt('end_date', new Date().toISOString());
-      
+
       if (error) throw error;
       return data as Sale[];
     },
   });
 
   const items = user ? cartItems : guestCart;
-  
-  // Calculate total with sales applied
-  const total = user 
+
+  // Calculate shipping total
+  const shippingTotal = user
+    ? cartItems?.reduce((sum, item) => sum + (item.products?.shipping_cost || 0) * item.quantity, 0) || 0
+    : guestCart.reduce((sum, item) => sum + (item.shipping_cost || 0) * item.quantity, 0);
+
+  // Calculate subtotal with sales applied
+  const subtotal = user
     ? cartItems?.reduce((sum, item) => {
-        const price = item.color_price || item.variation_price || item.products?.price || 0;
-        const productSale = activeSales?.find(
-          sale => !sale.is_global && sale.product_id === item.product_id
-        ) || null;
-        const globalSale = activeSales?.find(sale => sale.is_global) || null;
-        const { finalPrice } = calculateSalePrice(price, productSale, globalSale);
-        return sum + finalPrice * item.quantity;
-      }, 0) || 0
+      const price = item.color_price || item.variation_price || item.size_price || item.products?.price || 0;
+      const productSale = activeSales?.find(
+        sale => !sale.is_global && sale.product_id === item.product_id
+      ) || null;
+      const globalSale = activeSales?.find(sale => sale.is_global) || null;
+      const { finalPrice } = calculateSalePrice(price, productSale, globalSale);
+      return sum + finalPrice * item.quantity;
+    }, 0) || 0
     : guestCart.reduce((sum, item) => {
-        const price = item.color_price || item.variation_price || item.product_price;
-        const productSale = activeSales?.find(
-          sale => !sale.is_global && sale.product_id === item.product_id
-        ) || null;
-        const globalSale = activeSales?.find(sale => sale.is_global) || null;
-        const { finalPrice } = calculateSalePrice(price, productSale, globalSale);
-        return sum + finalPrice * item.quantity;
-      }, 0);
+      const price = item.color_price || item.variation_price || item.size_price || item.product_price;
+      const productSale = activeSales?.find(
+        sale => !sale.is_global && sale.product_id === item.product_id
+      ) || null;
+      const globalSale = activeSales?.find(sale => sale.is_global) || null;
+      const { finalPrice } = calculateSalePrice(price, productSale, globalSale);
+      return sum + finalPrice * item.quantity;
+    }, 0);
+
+  const total = subtotal + shippingTotal;
 
   // Track TikTok Pixel InitiateCheckout when cart data is loaded
   useEffect(() => {
@@ -139,36 +146,36 @@ const Checkout = () => {
   const validatePhoneNumber = (phone: string): { isValid: boolean; formatted: string; error: string } => {
     // Remove all spaces and dashes for validation
     let cleanPhone = phone.replace(/[\s-]/g, '');
-    
+
     // Check if it starts with +92
     if (!cleanPhone.startsWith('+92')) {
       return { isValid: false, formatted: phone, error: "Phone number must start with +92" };
     }
-    
+
     // Remove +92 prefix to check the rest
     let numberPart = cleanPhone.slice(3);
-    
+
     // If it starts with 0, remove it
     if (numberPart.startsWith('0')) {
       numberPart = numberPart.slice(1);
       cleanPhone = '+92' + numberPart;
     }
-    
+
     // Check if the number part has exactly 10 digits
     if (!/^\d{10}$/.test(numberPart)) {
-      return { 
-        isValid: false, 
-        formatted: cleanPhone, 
-        error: `Phone number must have exactly 10 digits after +92 (currently ${numberPart.length})` 
+      return {
+        isValid: false,
+        formatted: cleanPhone,
+        error: `Phone number must have exactly 10 digits after +92 (currently ${numberPart.length})`
       };
     }
-    
+
     return { isValid: true, formatted: cleanPhone, error: "" };
   };
 
   const isPhoneValid = validatePhoneNumber(formData.phone).isValid;
-  const isFormValid = formData.firstName && formData.city && isPhoneValid && 
-                      formData.addressLine1;
+  const isFormValid = formData.firstName && formData.city && isPhoneValid &&
+    formData.addressLine1;
 
   // Mutations for cart operations
   const updateQuantity = useMutation({
@@ -199,12 +206,12 @@ const Checkout = () => {
   });
 
   const handleGuestQuantityUpdate = (item: GuestCartItem, quantity: number) => {
-    updateGuestCartQuantity(item.product_id, quantity, item.variation_id, item.color_id);
+    updateGuestCartQuantity(item.product_id, quantity, item.variation_id, item.color_id, item.size_id);
     setGuestCart(getGuestCart());
   };
 
   const handleGuestRemove = (item: GuestCartItem) => {
-    removeFromGuestCart(item.product_id, item.variation_id, item.color_id);
+    removeFromGuestCart(item.product_id, item.variation_id, item.color_id, item.size_id);
     setGuestCart(getGuestCart());
     toast({ title: "Item removed from cart" });
   };
@@ -238,6 +245,7 @@ const Checkout = () => {
           phone: formattedPhone,
           shipping_address: formData.addressLine1 + (formData.addressLine2 ? `, ${formData.addressLine2}` : ''),
           shipping_city: formData.city,
+          shipping_cost: shippingTotal,
           shipping_state: null,
           shipping_zip: null,
           total_amount: total,
@@ -249,18 +257,18 @@ const Checkout = () => {
       if (orderError) throw orderError;
 
       const orderItems = items.map((item: any) => {
-        const originalPrice = user 
-          ? (item.color_price || item.variation_price || item.products?.price || 0)
-          : (item.color_price || item.variation_price || item.product_price);
+        const originalPrice = user
+          ? (item.color_price || item.variation_price || item.size_price || item.products?.price || 0)
+          : (item.color_price || item.variation_price || item.size_price || item.product_price);
         const productId = user ? item.product_id : item.product_id;
-        
+
         // Apply sales when storing order items
         const productSale = activeSales?.find(
           sale => !sale.is_global && sale.product_id === productId
         ) || null;
         const globalSale = activeSales?.find(sale => sale.is_global) || null;
         const { finalPrice } = calculateSalePrice(originalPrice, productSale, globalSale);
-        
+
         return {
           order_id: order.id,
           product_id: productId,
@@ -273,6 +281,9 @@ const Checkout = () => {
           color_name: item.color_name || null,
           color_code: item.color_code || null,
           color_price: item.color_price || null,
+          size_id: item.size_id || null,
+          size_name: item.size_name || null,
+          size_price: item.size_price || null,
         };
       });
 
@@ -291,7 +302,7 @@ const Checkout = () => {
             .select('quantity')
             .eq('id', item.variation_id)
             .single();
-          
+
           if (variation) {
             await supabase
               .from('product_variations')
@@ -299,7 +310,7 @@ const Checkout = () => {
               .eq('id', item.variation_id);
           }
         }
-        
+
         if (item.color_id) {
           // Decrement color quantity
           const { data: color } = await supabase
@@ -307,12 +318,28 @@ const Checkout = () => {
             .select('quantity')
             .eq('id', item.color_id)
             .single();
-          
+
           if (color) {
             await supabase
               .from('product_colors')
               .update({ quantity: Math.max(0, color.quantity - item.quantity) })
               .eq('id', item.color_id);
+          }
+        }
+
+        if (item.size_id) {
+          // Decrement size quantity
+          const { data: size } = await supabase
+            .from('product_sizes')
+            .select('quantity')
+            .eq('id', item.size_id)
+            .single();
+
+          if (size) {
+            await supabase
+              .from('product_sizes')
+              .update({ quantity: Math.max(0, size.quantity - item.quantity) })
+              .eq('id', item.size_id);
           }
         }
       }
@@ -331,13 +358,13 @@ const Checkout = () => {
     },
     onSuccess: (orderId) => {
       queryClient.invalidateQueries({ queryKey: ['cart'] });
-      
+
       // Track purchase event
       trackEvent('purchase', {
         order_id: orderId,
         total_amount: total,
       });
-      
+
       toast({
         title: "Order placed successfully!",
         description: "Thank you for your order. We'll process it shortly.",
@@ -355,11 +382,11 @@ const Checkout = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    
+
     if (name === 'phone') {
       // Clear phone error when user starts typing
       setPhoneError("");
-      
+
       // If user tries to delete +92, prevent it
       if (!value.startsWith('+92')) {
         setFormData(prev => ({
@@ -368,14 +395,14 @@ const Checkout = () => {
         }));
         return;
       }
-      
+
       // Validate on blur or when complete
       const validation = validatePhoneNumber(value);
       if (value.length >= 13) { // +92 + 10 digits
         setPhoneError(validation.error);
       }
     }
-    
+
     setFormData(prev => ({
       ...prev,
       [name]: value,
@@ -417,7 +444,7 @@ const Checkout = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      
+
       <main className="flex-1 py-8 md:py-12">
         <div className="container mx-auto px-4">
           <h1 className="font-display text-3xl md:text-4xl font-bold mb-6 md:mb-8 text-center gold-accent pb-6 md:pb-8">
@@ -429,7 +456,7 @@ const Checkout = () => {
               <Card>
                 <CardContent className="p-4 md:p-6">
                   <h2 className="font-display text-xl md:text-2xl font-bold mb-4 md:mb-6">Shipping Information</h2>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="firstName" className="text-sm">First Name *</Label>
@@ -537,27 +564,28 @@ const Checkout = () => {
               <Card>
                 <CardContent className="p-4 md:p-6">
                   <h2 className="font-display text-xl md:text-2xl font-bold mb-4">Order Summary</h2>
-                  
+
                   <div className="space-y-3 mb-4 md:mb-6 max-h-[400px] overflow-y-auto">
                     {items?.map((item: any, idx: number) => {
                       const isGuest = !user;
-                      const originalPrice = isGuest 
-                        ? (item.color_price || item.variation_price || item.product_price)
-                        : (item.color_price || item.variation_price || item.products?.price || 0);
+                      const originalPrice = isGuest
+                        ? (item.color_price || item.variation_price || item.size_price || item.product_price)
+                        : (item.color_price || item.variation_price || item.size_price || item.products?.price || 0);
                       const productId = isGuest ? item.product_id : item.product_id;
-                      
+
                       // Calculate sale price for each item
                       const productSale = activeSales?.find(
                         sale => !sale.is_global && sale.product_id === productId
                       ) || null;
                       const globalSale = activeSales?.find(sale => sale.is_global) || null;
                       const { finalPrice } = calculateSalePrice(originalPrice, productSale, globalSale);
-                      
+
                       const productData = {
                         name: isGuest ? item.product_name : item.products?.name,
                         price: finalPrice,
                         variationName: item.variation_name,
                         colorName: item.color_name,
+                        sizeName: item.size_name,
                         image: isGuest ? item.product_image : item.products?.images?.[0],
                       };
 
@@ -585,6 +613,11 @@ const Checkout = () => {
                               {productData.colorName && (
                                 <p className="text-xs text-muted-foreground">
                                   Color: {productData.colorName}
+                                </p>
+                              )}
+                              {productData.sizeName && (
+                                <p className="text-xs text-muted-foreground">
+                                  Size: {productData.sizeName}
                                 </p>
                               )}
                               <div className="flex items-center gap-2 mt-2">
@@ -651,11 +684,11 @@ const Checkout = () => {
                   <div className="space-y-2 mb-4 md:mb-6 text-sm">
                     <div className="flex justify-between">
                       <span>Subtotal</span>
-                      <span>{formatPrice(total)}</span>
+                      <span>{formatPrice(subtotal)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Shipping</span>
-                      <span>FREE</span>
+                      <span>{shippingTotal > 0 ? formatPrice(shippingTotal) : 'FREE'}</span>
                     </div>
                     <div className="border-t pt-2 mt-2">
                       <div className="flex justify-between font-bold text-base md:text-lg">

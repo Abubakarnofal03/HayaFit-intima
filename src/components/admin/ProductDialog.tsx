@@ -11,6 +11,7 @@ import { ImageUpload } from "./ImageUpload";
 import { VideoUpload } from "./VideoUpload";
 import { VariationManager, Variation } from "./VariationManager";
 import { ColorManager, Color } from "./ColorManager";
+import { SizeManager, Size } from "./SizeManager";
 
 interface ProductDialogProps {
   open: boolean;
@@ -41,6 +42,7 @@ export function ProductDialog({ open, onOpenChange, product, categories, onSucce
   });
   const [variations, setVariations] = useState<Variation[]>([]);
   const [colors, setColors] = useState<Color[]>([]);
+  const [sizes, setSizes] = useState<Size[]>([]);
 
   useEffect(() => {
     if (product) {
@@ -60,7 +62,7 @@ export function ProductDialog({ open, onOpenChange, product, categories, onSucce
         weight_kg: product.weight_kg?.toString() || "",
         banner_image: product.banner_image || [],
       });
-      
+
       // Fetch variations if editing
       if (product.id) {
         supabase
@@ -100,6 +102,25 @@ export function ProductDialog({ open, onOpenChange, product, categories, onSucce
               })));
             }
           });
+
+        // Fetch sizes if editing
+        supabase
+          .from("product_sizes")
+          .select("*")
+          .eq("product_id", product.id)
+          .order("sort_order")
+          .then(({ data }) => {
+            if (data) {
+              setSizes(data.map(s => ({
+                id: s.id,
+                name: s.name,
+                price: s.price.toString(),
+                quantity: s.quantity.toString(),
+                sort_order: s.sort_order,
+                apply_sale: s.apply_sale ?? true,
+              })));
+            }
+          });
       }
     } else {
       setFormData({
@@ -120,6 +141,7 @@ export function ProductDialog({ open, onOpenChange, product, categories, onSucce
       });
       setVariations([]);
       setColors([]);
+      setSizes([]);
     }
   }, [product, open]);
 
@@ -154,15 +176,20 @@ export function ProductDialog({ open, onOpenChange, product, categories, onSucce
           .eq("id", product.id);
         if (error) throw error;
         productId = product.id;
-        
-        // Delete existing variations and colors
+
+        // Delete existing variations, colors, and sizes
         await supabase
           .from("product_variations")
           .delete()
           .eq("product_id", productId);
-        
+
         await supabase
           .from("product_colors")
+          .delete()
+          .eq("product_id", productId);
+
+        await supabase
+          .from("product_sizes")
           .delete()
           .eq("product_id", productId);
       } else {
@@ -187,7 +214,7 @@ export function ProductDialog({ open, onOpenChange, product, categories, onSucce
             sort_order: index,
             apply_sale: v.apply_sale,
           }));
-        
+
         if (variationsData.length > 0) {
           const { error: varError } = await supabase
             .from("product_variations")
@@ -209,12 +236,33 @@ export function ProductDialog({ open, onOpenChange, product, categories, onSucce
             sort_order: index,
             apply_sale: c.apply_sale,
           }));
-        
+
         if (colorsData.length > 0) {
           const { error: colorError } = await supabase
             .from("product_colors")
             .insert(colorsData);
           if (colorError) throw colorError;
+        }
+      }
+
+      // Insert sizes if any
+      if (sizes.length > 0) {
+        const sizesData = sizes
+          .filter(s => s.name)
+          .map((s, index) => ({
+            product_id: productId,
+            name: s.name,
+            price: s.price && parseFloat(s.price) > 0 ? parseFloat(s.price) : 0,
+            quantity: parseInt(s.quantity) || 0,
+            sort_order: index,
+            apply_sale: s.apply_sale,
+          }));
+
+        if (sizesData.length > 0) {
+          const { error: sizeError } = await supabase
+            .from("product_sizes")
+            .insert(sizesData);
+          if (sizeError) throw sizeError;
         }
       }
 
@@ -375,7 +423,7 @@ export function ProductDialog({ open, onOpenChange, product, categories, onSucce
               />
               <Label htmlFor="featured">Featured Product</Label>
             </div>
-            
+
             <div className="flex items-center space-x-2">
               <input
                 type="checkbox"
@@ -406,6 +454,11 @@ export function ProductDialog({ open, onOpenChange, product, categories, onSucce
           <ColorManager
             colors={colors}
             onChange={setColors}
+          />
+
+          <SizeManager
+            sizes={sizes}
+            onChange={setSizes}
           />
 
           <DialogFooter>

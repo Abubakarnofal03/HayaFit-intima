@@ -96,23 +96,30 @@ const Cart = () => {
   };
 
   const items = user ? cartItems : guestCart;
-  
-  // Calculate total with sale prices
-  const total = user 
+
+  // Calculate shipping total
+  const shippingTotal = user
+    ? cartItems?.reduce((sum, item) => sum + (item.products?.shipping_cost || 0) * item.quantity, 0) || 0
+    : guestCart.reduce((sum, item) => sum + (item.shipping_cost || 0) * item.quantity, 0);
+
+  // Calculate subtotal with sale prices
+  const subtotal = user
     ? cartItems?.reduce((sum, item) => {
-        const price = item.variation_price || item.products?.price || 0;
-        const productSale = sales?.find(s => s.product_id === item.product_id);
-        const globalSale = sales?.find(s => s.is_global);
-        const { finalPrice } = calculateSalePrice(price, productSale, globalSale);
-        return sum + finalPrice * item.quantity;
-      }, 0) || 0
+      const price = item.variation_price || item.products?.price || 0;
+      const productSale = sales?.find(s => s.product_id === item.product_id);
+      const globalSale = sales?.find(s => s.is_global);
+      const { finalPrice } = calculateSalePrice(price, productSale, globalSale);
+      return sum + finalPrice * item.quantity;
+    }, 0) || 0
     : guestCart.reduce((sum, item) => {
-        const price = item.variation_price || item.product_price;
-        const productSale = sales?.find(s => s.product_id === item.product_id);
-        const globalSale = sales?.find(s => s.is_global);
-        const { finalPrice } = calculateSalePrice(price, productSale, globalSale);
-        return sum + finalPrice * item.quantity;
-      }, 0);
+      const price = item.variation_price || item.product_price;
+      const productSale = sales?.find(s => s.product_id === item.product_id);
+      const globalSale = sales?.find(s => s.is_global);
+      const { finalPrice } = calculateSalePrice(price, productSale, globalSale);
+      return sum + finalPrice * item.quantity;
+    }, 0);
+
+  const total = subtotal + shippingTotal;
 
   if (isLoading && user) {
     return (
@@ -127,7 +134,7 @@ const Cart = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      
+
       <main className="flex-1 py-8 md:py-12">
         <div className="container mx-auto px-4">
           <h1 className="font-display text-3xl md:text-4xl font-bold mb-6 md:mb-8 text-center gold-accent pb-6 md:pb-8">
@@ -152,12 +159,14 @@ const Cart = () => {
                     image: item.product_image,
                     productId: item.product_id,
                     variationName: item.variation_name,
+                    sizeName: item.size_name,
                   } : {
                     name: item.products?.name,
                     price: item.variation_price || item.products?.price,
                     image: item.products?.images?.[0],
                     productId: item.product_id,
                     variationName: item.variation_name,
+                    sizeName: item.size_name,
                   };
 
                   const productSale = sales?.find(s => s.product_id === productData.productId);
@@ -189,6 +198,11 @@ const Cart = () => {
                             {productData.variationName && (
                               <p className="text-xs text-muted-foreground mb-1">
                                 Variation: {productData.variationName}
+                              </p>
+                            )}
+                            {productData.sizeName && (
+                              <p className="text-xs text-muted-foreground mb-1">
+                                Size: {productData.sizeName}
                               </p>
                             )}
                             {discount ? (
@@ -281,11 +295,11 @@ const Cart = () => {
                     <div className="space-y-2 mb-4">
                       <div className="flex justify-between text-sm md:text-base">
                         <span>Subtotal</span>
-                        <span>{formatPrice(total)}</span>
+                        <span>{formatPrice(subtotal)}</span>
                       </div>
                       <div className="flex justify-between text-sm md:text-base">
                         <span>Shipping</span>
-                        <span>FREE</span>
+                        <span>{shippingTotal > 0 ? formatPrice(shippingTotal) : 'FREE'}</span>
                       </div>
                       <div className="border-t pt-2 mt-2">
                         <div className="flex justify-between font-bold text-base md:text-lg">

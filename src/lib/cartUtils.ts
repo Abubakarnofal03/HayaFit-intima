@@ -6,13 +6,17 @@ export interface GuestCartItem {
   product_name: string;
   product_price: number;
   product_image?: string;
-  variation_id?: string;
-  variation_name?: string;
-  variation_price?: number;
-  color_id?: string;
-  color_name?: string;
-  color_code?: string;
-  color_price?: number;
+  variation_id?: string | null;
+  variation_name?: string | null;
+  variation_price?: number | null;
+  color_id?: string | null;
+  color_name?: string | null;
+  color_code?: string | null;
+  color_price?: number | null;
+  size_id?: string | null;
+  size_name?: string | null;
+  size_price?: number | null;
+  shipping_cost?: number;
 }
 
 const CART_STORAGE_KEY = 'guest_cart';
@@ -37,35 +41,38 @@ export const setGuestCart = (cart: GuestCartItem[]): void => {
 
 export const addToGuestCart = (item: GuestCartItem): void => {
   const cart = getGuestCart();
-  // Match by product_id, variation_id, and color_id to handle variations and colors correctly
-  const existingIndex = cart.findIndex(i => 
-    i.product_id === item.product_id && 
+  // Match by product_id, variation_id, color_id, and size_id to handle variations, colors, and sizes correctly
+  const existingIndex = cart.findIndex(i =>
+    i.product_id === item.product_id &&
     i.variation_id === item.variation_id &&
-    i.color_id === item.color_id
+    i.color_id === item.color_id &&
+    i.size_id === item.size_id
   );
-  
+
   if (existingIndex >= 0) {
     cart[existingIndex].quantity += item.quantity;
   } else {
     cart.push(item);
   }
-  
+
   setGuestCart(cart);
 };
 
 export const updateGuestCartQuantity = (
-  productId: string, 
-  quantity: number, 
-  variationId?: string, 
-  colorId?: string
+  productId: string,
+  quantity: number,
+  variationId?: string | null,
+  colorId?: string | null,
+  sizeId?: string | null
 ): void => {
   const cart = getGuestCart();
-  const index = cart.findIndex(i => 
-    i.product_id === productId && 
+  const index = cart.findIndex(i =>
+    i.product_id === productId &&
     i.variation_id === variationId &&
-    i.color_id === colorId
+    i.color_id === colorId &&
+    i.size_id === sizeId
   );
-  
+
   if (index >= 0) {
     if (quantity <= 0) {
       cart.splice(index, 1);
@@ -77,15 +84,17 @@ export const updateGuestCartQuantity = (
 };
 
 export const removeFromGuestCart = (
-  productId: string, 
-  variationId?: string, 
-  colorId?: string
+  productId: string,
+  variationId?: string | null,
+  colorId?: string | null,
+  sizeId?: string | null
 ): void => {
   const cart = getGuestCart();
   const filtered = cart.filter(i => !(
-    i.product_id === productId && 
+    i.product_id === productId &&
     i.variation_id === variationId &&
-    i.color_id === colorId
+    i.color_id === colorId &&
+    i.size_id === sizeId
   ));
   setGuestCart(filtered);
 };

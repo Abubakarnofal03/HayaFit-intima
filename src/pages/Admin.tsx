@@ -1494,6 +1494,11 @@ const Admin = () => {
                                           {item.color_name}
                                         </Badge>
                                       )}
+                                      {item.size_name && (
+                                        <Badge variant="outline" className="text-xs">
+                                          {item.size_name}
+                                        </Badge>
+                                      )}
                                     </div>
                                     <span className="text-muted-foreground">Qty: {item.quantity} × {formatPrice(item.price)}</span>
                                   </div>

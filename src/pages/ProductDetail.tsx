@@ -32,6 +32,7 @@ const ProductDetail = ({ key }: { key?: string }) => {
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
   const [selectedVariation, setSelectedVariation] = useState<any>(null);
   const [selectedColor, setSelectedColor] = useState<any>(null);
+  const [selectedSize, setSelectedSize] = useState<any>(null);
   const [showStickyBar, setShowStickyBar] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -46,11 +47,13 @@ const ProductDetail = ({ key }: { key?: string }) => {
     setSelectedImageIndex(0);
     setSelectedVariation(null);
     setSelectedColor(null);
+    setSelectedSize(null);
 
     // Invalidate all queries to ensure fresh data
     queryClient.invalidateQueries({ queryKey: ['product', slug] });
     queryClient.invalidateQueries({ queryKey: ['product-variations'] });
     queryClient.invalidateQueries({ queryKey: ['product-colors'] });
+    queryClient.invalidateQueries({ queryKey: ['product-sizes'] });
     queryClient.invalidateQueries({ queryKey: ['related-products'] });
   }, [slug, queryClient]);
 
@@ -136,6 +139,21 @@ const ProductDetail = ({ key }: { key?: string }) => {
     enabled: !!product,
   });
 
+  const { data: sizes } = useQuery({
+    queryKey: ["product-sizes", product?.id],
+    queryFn: async () => {
+      if (!product?.id) return [];
+      const { data, error } = await supabase
+        .from("product_sizes")
+        .select("*")
+        .eq("product_id", product.id)
+        .order("sort_order");
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!product,
+  });
+
   // Set first variation as default when variations load
   useEffect(() => {
     if (variations && variations.length > 0 && !selectedVariation) {
@@ -150,6 +168,13 @@ const ProductDetail = ({ key }: { key?: string }) => {
     }
   }, [colors, selectedColor]);
 
+  // Set first size as default when sizes load
+  useEffect(() => {
+    if (sizes && sizes.length > 0 && !selectedSize) {
+      setSelectedSize(sizes[0]);
+    }
+  }, [sizes, selectedSize]);
+
   const addToCart = useMutation({
     mutationFn: async () => {
       // Check stock availability
@@ -159,13 +184,18 @@ const ProductDetail = ({ key }: { key?: string }) => {
       if (selectedVariation && !selectedColor && selectedVariation.quantity < quantity) {
         throw new Error(`Only ${selectedVariation.quantity} items available in stock`);
       }
+      if (selectedSize && !selectedColor && !selectedVariation && selectedSize.quantity < quantity) {
+        throw new Error(`Only ${selectedSize.quantity} items available in stock`);
+      }
 
-      // Determine the price to use (color > variation > product)
+      // Determine the price to use (color > variation > size > product)
       const priceToUse = selectedColor
         ? selectedColor.price
         : selectedVariation
           ? selectedVariation.price
-          : product.price;
+          : selectedSize
+            ? selectedSize.price
+            : product.price;
 
       if (user) {
         // Check if item already exists in cart (considering both variation and color)
@@ -177,10 +207,11 @@ const ProductDetail = ({ key }: { key?: string }) => {
 
         let existingItem = null;
         if (existingItems && existingItems.length > 0) {
-          // Find exact match including variation and color
+          // Find exact match including variation, color, and size
           existingItem = existingItems.find(item =>
             item.variation_id === (selectedVariation?.id || null) &&
-            item.color_id === (selectedColor?.id || null)
+            item.color_id === (selectedColor?.id || null) &&
+            item.size_id === (selectedSize?.id || null)
           );
         }
 
@@ -204,6 +235,9 @@ const ProductDetail = ({ key }: { key?: string }) => {
             color_name: selectedColor?.name || null,
             color_code: selectedColor?.color_code || null,
             color_price: selectedColor?.price || null,
+            size_id: selectedSize?.id || null,
+            size_name: selectedSize?.name || null,
+            size_price: selectedSize?.price || null,
           });
           if (error) throw error;
         }
@@ -224,18 +258,26 @@ const ProductDetail = ({ key }: { key?: string }) => {
           color_price: (selectedColor?.price && parseFloat(selectedColor.price) > 0)
             ? parseFloat(selectedColor.price)
             : null,
+          size_id: selectedSize?.id || null,
+          size_name: selectedSize?.name || null,
+          size_price: (selectedSize?.price && parseFloat(selectedSize.price) > 0)
+            ? parseFloat(selectedSize.price)
+            : null,
+          shipping_cost: product.shipping_cost,
         });
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cart"] });
 
-      // Calculate sale price for tracking (use color > variation > product price)
+      // Calculate sale price for tracking (use color > variation > size > product price)
       const basePrice = (selectedColor?.price && parseFloat(selectedColor.price) > 0)
         ? parseFloat(selectedColor.price)
         : selectedVariation
           ? selectedVariation.price
-          : product.price;
+          : selectedSize
+            ? selectedSize.price
+            : product.price;
       const productSale = sales?.find((s) => s.product_id === product.id);
       const globalSale = sales?.find((s) => s.is_global);
       const { finalPrice } = calculateSalePrice(basePrice, productSale, globalSale);
@@ -256,6 +298,8 @@ const ProductDetail = ({ key }: { key?: string }) => {
         variation_name: selectedVariation?.name,
         color_id: selectedColor?.id,
         color_name: selectedColor?.name,
+        size_id: selectedSize?.id,
+        size_name: selectedSize?.name,
       });
 
       toast({
@@ -280,19 +324,23 @@ const ProductDetail = ({ key }: { key?: string }) => {
   };
 
   // Calculate sale price (needed for tracking)
-  // Use color price if selected and has value, otherwise variation price, otherwise product price
+  // Use color price if selected and has value, otherwise variation price, otherwise size price, otherwise product price
   const displayPrice = (selectedColor?.price && parseFloat(selectedColor.price) > 0)
     ? parseFloat(selectedColor.price)
     : selectedVariation
       ? selectedVariation.price
-      : product?.price || 0;
+      : selectedSize
+        ? selectedSize.price
+        : product?.price || 0;
   const productSale = sales?.find((s) => s.product_id === product?.id);
   const globalSale = sales?.find((s) => s.is_global);
   const applySaleToItem = selectedColor
     ? selectedColor.apply_sale !== false
     : selectedVariation
       ? selectedVariation.apply_sale !== false
-      : true;
+      : selectedSize
+        ? selectedSize.apply_sale !== false
+        : true;
   const { finalPrice, discount } = calculateSalePrice(displayPrice, productSale, globalSale, applySaleToItem);
 
   // Calculate total price (finalPrice * quantity)
@@ -534,6 +582,31 @@ const ProductDetail = ({ key }: { key?: string }) => {
                     </div>
                   )}
 
+                  {/* Sizes */}
+                  {sizes && sizes.length > 0 && (
+                    <div className="space-y-3">
+                      <label className="text-sm font-semibold text-foreground">
+                        Select Size
+                      </label>
+                      <div className="flex flex-wrap gap-3">
+                        {sizes.map((s: any) => (
+                          <button
+                            key={s.id}
+                            onClick={() => {
+                              setSelectedSize(s);
+                            }}
+                            className={`min-w-[3rem] px-3 py-2 text-sm border rounded-sm transition-all ${selectedSize?.id === s.id
+                              ? "border-primary bg-primary text-primary-foreground shadow-md"
+                              : "border-input hover:border-primary/50 hover:bg-accent"
+                              }`}
+                          >
+                            {s.name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Colors */}
                   {colors && colors.length > 0 && (
                     <div className="space-y-3">
@@ -598,7 +671,8 @@ const ProductDetail = ({ key }: { key?: string }) => {
                       addToCart.isPending ||
                       (selectedColor ? selectedColor.quantity === 0 :
                         selectedVariation ? selectedVariation.quantity === 0 :
-                          product.stock_quantity === 0)
+                          selectedSize ? selectedSize.quantity === 0 :
+                            product.stock_quantity === 0)
                     }
                   >
                     Buy Now
@@ -611,7 +685,8 @@ const ProductDetail = ({ key }: { key?: string }) => {
                       addToCart.isPending ||
                       (selectedColor ? selectedColor.quantity === 0 :
                         selectedVariation ? selectedVariation.quantity === 0 :
-                          product.stock_quantity === 0)
+                          selectedSize ? selectedSize.quantity === 0 :
+                            product.stock_quantity === 0)
                     }
                   >
                     <ShoppingCart className="mr-2 h-5 w-5" />
