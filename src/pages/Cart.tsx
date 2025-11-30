@@ -98,9 +98,16 @@ const Cart = () => {
   const items = user ? cartItems : guestCart;
 
   // Calculate shipping total
+  // Calculate shipping total - charge once per unique product regardless of quantity or variations
   const shippingTotal = user
-    ? cartItems?.reduce((sum, item) => sum + (item.products?.shipping_cost || 0) * item.quantity, 0) || 0
-    : guestCart.reduce((sum, item) => sum + (item.shipping_cost || 0) * item.quantity, 0);
+    ? Array.from(new Set(cartItems?.map(item => item.product_id))).reduce((sum, productId) => {
+      const item = cartItems?.find(i => i.product_id === productId);
+      return sum + (item?.products?.shipping_cost || 0);
+    }, 0)
+    : Array.from(new Set(guestCart.map(item => item.product_id))).reduce((sum, productId) => {
+      const item = guestCart.find(i => i.product_id === productId);
+      return sum + (item?.shipping_cost || 0);
+    }, 0);
 
   // Calculate subtotal with sale prices
   const subtotal = user

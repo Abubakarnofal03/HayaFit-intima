@@ -534,11 +534,11 @@ const ProductDetail = ({ key }: { key?: string }) => {
                   {/* Price */}
                   <div className="flex items-baseline gap-3">
                     <span className="text-3xl md:text-4xl font-bold text-primary">
-                      {formatPrice(finalPrice)}
+                      {formatPrice(finalPrice * quantity)}
                     </span>
                     {discount && (
                       <span className="text-xl text-muted-foreground line-through decoration-destructive/30">
-                        {formatPrice(displayPrice)}
+                        {formatPrice(displayPrice * quantity)}
                       </span>
                     )}
                   </div>

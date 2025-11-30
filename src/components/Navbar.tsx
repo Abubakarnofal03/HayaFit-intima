@@ -9,348 +9,348 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { SaleTimer } from "./SaleTimer";
 import logo from "@/assets/logo.jpg";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
+    NavigationMenu,
+    NavigationMenuContent,
+    NavigationMenuItem,
+    NavigationMenuLink,
+    NavigationMenuList,
+    NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 
 export const Navbar = () => {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [cartCount, setCartCount] = useState(0);
-  const [categories, setCategories] = useState<any[]>([]);
-  const [shopOpen, setShopOpen] = useState(false);
-  const navigate = useNavigate();
-  const { toast } = useToast();
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [user, setUser] = useState<any>(null);
+    const [isAdmin, setIsAdmin] = useState(false);
+    const [cartCount, setCartCount] = useState(0);
+    const [categories, setCategories] = useState<any[]>([]);
+    const [shopOpen, setShopOpen] = useState(false);
+    const navigate = useNavigate();
+    const { toast } = useToast();
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        checkAdminStatus(session.user.id);
-        fetchCartCount(session.user.id);
-      }
-    });
+    useEffect(() => {
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            setUser(session?.user ?? null);
+            if (session?.user) {
+                checkAdminStatus(session.user.id);
+                fetchCartCount(session.user.id);
+            }
+        });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        checkAdminStatus(session.user.id);
-        fetchCartCount(session.user.id);
-      } else {
-        setIsAdmin(false);
-        setCartCount(0);
-      }
-    });
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+            setUser(session?.user ?? null);
+            if (session?.user) {
+                checkAdminStatus(session.user.id);
+                fetchCartCount(session.user.id);
+            } else {
+                setIsAdmin(false);
+                setCartCount(0);
+            }
+        });
 
-    fetchCategories();
+        fetchCategories();
 
-    return () => subscription.unsubscribe();
-  }, []);
+        return () => subscription.unsubscribe();
+    }, []);
 
-  const fetchCategories = async () => {
-    const { data } = await supabase
-      .from('categories')
-      .select('*')
-      .order('name');
-    setCategories(data || []);
-  };
+    const fetchCategories = async () => {
+        const { data } = await supabase
+            .from('categories')
+            .select('*')
+            .order('name');
+        setCategories(data || []);
+    };
 
-  const checkAdminStatus = async (userId: string) => {
-    const { data } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', userId)
-      .eq('role', 'admin')
-      .maybeSingle();
-    setIsAdmin(!!data);
-  };
+    const checkAdminStatus = async (userId: string) => {
+        const { data } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', userId)
+            .eq('role', 'admin')
+            .maybeSingle();
+        setIsAdmin(!!data);
+    };
 
-  const fetchCartCount = async (userId?: string) => {
-    if (userId) {
-      const { count } = await supabase
-        .from('cart_items')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', userId);
-      setCartCount(count || 0);
-    } else {
-      // Guest user - use session storage
-      const guestCart = getGuestCart();
-      setCartCount(guestCart.length);
-    }
-  };
+    const fetchCartCount = async (userId?: string) => {
+        if (userId) {
+            const { count } = await supabase
+                .from('cart_items')
+                .select('*', { count: 'exact', head: true })
+                .eq('user_id', userId);
+            setCartCount(count || 0);
+        } else {
+            // Guest user - use session storage
+            const guestCart = getGuestCart();
+            setCartCount(guestCart.length);
+        }
+    };
 
-  // Update cart count for guest users when cart changes
-  useEffect(() => {
-    if (!user) {
-      const updateGuestCart = () => {
-        const guestCart = getGuestCart();
-        setCartCount(guestCart.length);
-      };
+    // Update cart count for guest users when cart changes
+    useEffect(() => {
+        if (!user) {
+            const updateGuestCart = () => {
+                const guestCart = getGuestCart();
+                setCartCount(guestCart.length);
+            };
 
-      window.addEventListener('storage', updateGuestCart);
-      // Check on mount
-      updateGuestCart();
+            window.addEventListener('storage', updateGuestCart);
+            // Check on mount
+            updateGuestCart();
 
-      return () => window.removeEventListener('storage', updateGuestCart);
-    }
-  }, [user]);
+            return () => window.removeEventListener('storage', updateGuestCart);
+        }
+    }, [user]);
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    toast({ title: "Logged out successfully" });
-    navigate("/");
-  };
+    const handleLogout = async () => {
+        await supabase.auth.signOut();
+        toast({ title: "Logged out successfully" });
+        navigate("/");
+    };
 
-  return (
-    <>
-      <SaleTimer />
-      <nav className="sticky top-0 z-50 glass-card border-b backdrop-blur-xl">
-        <div className="container mx-auto px-4 flex items-center justify-between h-20">
-          {/* Left: Logo & Brand */}
-          <Link to="/" className="flex items-center gap-3 group">
-            <img
-              src={logo}
-              alt="HayaFit Intima"
-              className="h-12 w-12 rounded-full object-cover border-2 border-primary/20 group-hover:border-primary transition-colors"
-            />
-            <div className="flex flex-col">
-              <span className="font-display text-xl font-bold text-primary tracking-tight group-hover:text-primary/80 transition-colors">
-                HayaFit Intima
-              </span>
-              <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                Luxury Collection
-              </span>
-            </div>
-          </Link>
+    return (
+        <>
+            <SaleTimer />
+            <nav className="sticky top-0 z-50 glass-card border-b backdrop-blur-xl">
+                <div className="container mx-auto px-4 flex items-center justify-between h-20">
+                    {/* Left: Logo & Brand */}
+                    <Link to="/" className="flex items-center gap-3 group">
+                        <img
+                            src={logo}
+                            alt="HayaFit Intima"
+                            className="h-12 w-12 rounded-full object-cover border-2 border-primary/20 group-hover:border-primary transition-colors"
+                        />
+                        <div className="flex flex-col">
+                            <span className="font-display text-xl font-bold text-primary tracking-tight group-hover:text-primary/80 transition-colors">
+                                HayaFit Intima
+                            </span>
+                            <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                                Luxury Collection
+                            </span>
+                        </div>
+                    </Link>
 
-          {/* Center: Navigation */}
-          <div className="hidden md:flex items-center gap-8">
-            <Link to="/" className="text-sm font-medium hover:text-primary transition-colors relative after:content-[''] after:absolute after:left-0 after:bottom-[-4px] after:h-[1px] after:w-0 after:bg-primary after:transition-all hover:after:w-full">
-              Home
-            </Link>
-            <NavigationMenu>
-              <NavigationMenuList>
-                <NavigationMenuItem>
-                  <NavigationMenuTrigger className="text-sm font-medium bg-transparent hover:bg-transparent data-[state=open]:bg-transparent hover:text-primary transition-colors h-auto p-0 relative after:content-[''] after:absolute after:left-0 after:bottom-[-4px] after:h-[1px] after:w-0 after:bg-primary after:transition-all hover:after:w-full">
-                    Catalog
-                  </NavigationMenuTrigger>
-                  <NavigationMenuContent>
-                    <div className="w-48 p-2">
-                      <NavigationMenuLink asChild>
-                        <Link
-                          to="/shop"
-                          className="block px-3 py-2 text-sm hover:bg-primary/5 hover:text-primary rounded-md transition-colors"
-                        >
-                          All Products
+                    {/* Center: Navigation */}
+                    <div className="hidden md:flex items-center gap-8">
+                        <Link to="/" className="text-sm font-medium hover:text-primary transition-colors relative after:content-[''] after:absolute after:left-0 after:bottom-[-4px] after:h-[1px] after:w-0 after:bg-primary after:transition-all hover:after:w-full">
+                            Home
                         </Link>
-                      </NavigationMenuLink>
-                      {categories.map((category) => (
-                        <NavigationMenuLink key={category.id} asChild>
-                          <Link
-                            to={`/shop?category=${category.slug}`}
-                            className="block px-3 py-2 text-sm hover:bg-primary/5 hover:text-primary rounded-md transition-colors"
-                          >
-                            {category.name}
-                          </Link>
-                        </NavigationMenuLink>
-                      ))}
+                        <NavigationMenu>
+                            <NavigationMenuList>
+                                <NavigationMenuItem>
+                                    <NavigationMenuTrigger className="text-sm font-medium bg-transparent hover:bg-transparent data-[state=open]:bg-transparent hover:text-primary transition-colors h-auto p-0 relative after:content-[''] after:absolute after:left-0 after:bottom-[-4px] after:h-[1px] after:w-0 after:bg-primary after:transition-all hover:after:w-full">
+                                        Catalog
+                                    </NavigationMenuTrigger>
+                                    <NavigationMenuContent>
+                                        <div className="w-48 p-2">
+                                            <NavigationMenuLink asChild>
+                                                <Link
+                                                    to="/shop"
+                                                    className="block px-3 py-2 text-sm hover:bg-primary/5 hover:text-primary rounded-md transition-colors"
+                                                >
+                                                    All Products
+                                                </Link>
+                                            </NavigationMenuLink>
+                                            {categories.map((category) => (
+                                                <NavigationMenuLink key={category.id} asChild>
+                                                    <Link
+                                                        to={`/shop?category=${category.slug}`}
+                                                        className="block px-3 py-2 text-sm hover:bg-primary/5 hover:text-primary rounded-md transition-colors"
+                                                    >
+                                                        {category.name}
+                                                    </Link>
+                                                </NavigationMenuLink>
+                                            ))}
+                                        </div>
+                                    </NavigationMenuContent>
+                                </NavigationMenuItem>
+                            </NavigationMenuList>
+                        </NavigationMenu>
+                        <Link to="/about" className="text-sm font-medium hover:text-primary transition-colors relative after:content-[''] after:absolute after:left-0 after:bottom-[-4px] after:h-[1px] after:w-0 after:bg-primary after:transition-all hover:after:w-full">
+                            About
+                        </Link>
+                        <Link to="/contact" className="text-sm font-medium hover:text-primary transition-colors relative after:content-[''] after:absolute after:left-0 after:bottom-[-4px] after:h-[1px] after:w-0 after:bg-primary after:transition-all hover:after:w-full">
+                            Contact
+                        </Link>
                     </div>
-                  </NavigationMenuContent>
-                </NavigationMenuItem>
-              </NavigationMenuList>
-            </NavigationMenu>
-            <Link to="/about" className="text-sm font-medium hover:text-primary transition-colors relative after:content-[''] after:absolute after:left-0 after:bottom-[-4px] after:h-[1px] after:w-0 after:bg-primary after:transition-all hover:after:w-full">
-              About
-            </Link>
-            <Link to="/contact" className="text-sm font-medium hover:text-primary transition-colors relative after:content-[''] after:absolute after:left-0 after:bottom-[-4px] after:h-[1px] after:w-0 after:bg-primary after:transition-all hover:after:w-full">
-              Contact
-            </Link>
-          </div>
 
-          {/* Right: Actions */}
-          <div className="hidden md:flex items-center space-x-4">
-            <ThemeToggle />
-            <Link to="/cart" className="relative">
-              <Button variant="ghost" size="icon">
-                <ShoppingCart className="h-5 w-5" />
-                {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-accent text-accent-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                    {cartCount}
-                  </span>
+                    {/* Right: Actions */}
+                    <div className="hidden md:flex items-center space-x-4">
+                        <ThemeToggle />
+                        <Link to="/cart" className="relative">
+                            <Button variant="ghost" size="icon">
+                                <ShoppingCart className="h-5 w-5" />
+                                {cartCount > 0 && (
+                                    <span className="absolute -top-1 -right-1 bg-accent text-accent-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                                        {cartCount}
+                                    </span>
+                                )}
+                            </Button>
+                        </Link>
+                        {user ? (
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon">
+                                        <User className="h-5 w-5" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => navigate('/orders')}>
+                                        My Orders
+                                    </DropdownMenuItem>
+                                    {isAdmin && (
+                                        <DropdownMenuItem onClick={() => navigate('/admin')}>
+                                            Admin Dashboard
+                                        </DropdownMenuItem>
+                                    )}
+                                    <DropdownMenuItem onClick={handleLogout}>
+                                        <LogOut className="mr-2 h-4 w-4" />
+                                        Logout
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        ) : (
+                            <Button onClick={() => navigate('/auth')} variant="default">
+                                Sign In
+                            </Button>
+                        )}
+                    </div>
+
+                    {/* Mobile Actions - Only Hamburger Menu */}
+                    <div className="flex md:hidden items-center">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                            className="glass-button rounded-full"
+                        >
+                            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                        </Button>
+                    </div>
+                </div>
+
+                {/* Mobile Menu */}
+                {mobileMenuOpen && (
+                    <div className="md:hidden py-4 space-y-4 animate-fade-in glass-card mx-4 rounded-2xl mt-2 mb-4">
+                        {/* Cart Item at Top */}
+                        <Link
+                            to="/cart"
+                            className="flex items-center justify-between px-4 py-3 hover:bg-accent/10 transition-colors rounded-xl mx-2"
+                            onClick={() => setMobileMenuOpen(false)}
+                        >
+                            <span className="text-sm font-medium flex items-center gap-2">
+                                <ShoppingCart className="h-4 w-4" />
+                                Cart
+                            </span>
+                            {cartCount > 0 && (
+                                <span className="bg-accent text-accent-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                                    {cartCount}
+                                </span>
+                            )}
+                        </Link>
+                        <div className="h-px bg-border mx-4" />
+                        <div className="flex items-center justify-between px-4">
+                            <span className="text-sm font-medium">Theme</span>
+                            <ThemeToggle />
+                        </div>
+                        <Link
+                            to="/"
+                            className="block px-4 text-sm font-medium hover:text-accent transition-colors"
+                            onClick={() => setMobileMenuOpen(false)}
+                        >
+                            Home
+                        </Link>
+                        <Collapsible open={shopOpen} onOpenChange={setShopOpen}>
+                            <CollapsibleTrigger className="flex items-center justify-between px-4 text-left w-full text-sm font-medium hover:text-accent transition-colors">
+                                <span>Catalog</span>
+                                <ChevronDown className={`h-4 w-4 transition-transform ${shopOpen ? 'rotate-180' : ''}`} />
+                            </CollapsibleTrigger>
+                            <CollapsibleContent className="pl-8 space-y-2 pt-2">
+                                <Link
+                                    to="/shop"
+                                    className="block px-4 text-sm hover:text-accent transition-colors py-1"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                >
+                                    All Products
+                                </Link>
+                                {categories.map((category) => (
+                                    <Link
+                                        key={category.id}
+                                        to={`/shop?category=${category.slug}`}
+                                        className="block px-4 text-sm hover:text-accent transition-colors py-1"
+                                        onClick={() => setMobileMenuOpen(false)}
+                                    >
+                                        {category.name}
+                                    </Link>
+                                ))}
+                            </CollapsibleContent>
+                        </Collapsible>
+                        <Link
+                            to="/about"
+                            className="block px-4 text-sm font-medium hover:text-accent transition-colors"
+                            onClick={() => setMobileMenuOpen(false)}
+                        >
+                            About
+                        </Link>
+                        <Link
+                            to="/contact"
+                            className="block px-4 text-sm font-medium hover:text-accent transition-colors"
+                            onClick={() => setMobileMenuOpen(false)}
+                        >
+                            Contact
+                        </Link>
+                        {user ? (
+                            <>
+                                <Link
+                                    to="/orders"
+                                    className="block px-4 text-sm font-medium hover:text-accent transition-colors"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                >
+                                    My Orders
+                                </Link>
+                                {isAdmin && (
+                                    <Link
+                                        to="/admin"
+                                        className="block px-4 text-sm font-medium hover:text-accent transition-colors"
+                                        onClick={() => setMobileMenuOpen(false)}
+                                    >
+                                        Admin Dashboard
+                                    </Link>
+                                )}
+                                <button
+                                    onClick={() => {
+                                        handleLogout();
+                                        setMobileMenuOpen(false);
+                                    }}
+                                    className="block px-4 text-left w-full text-sm font-medium hover:text-accent transition-colors"
+                                >
+                                    Logout
+                                </button>
+                            </>
+                        ) : (
+                            <Button
+                                onClick={() => {
+                                    navigate('/auth');
+                                    setMobileMenuOpen(false);
+                                }}
+                                variant="default"
+                                className="w-full"
+                            >
+                                Sign In
+                            </Button>
+                        )}
+                    </div>
                 )}
-              </Button>
-            </Link>
-            {user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <User className="h-5 w-5" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => navigate('/orders')}>
-                    My Orders
-                  </DropdownMenuItem>
-                  {isAdmin && (
-                    <DropdownMenuItem onClick={() => navigate('/admin')}>
-                      Admin Dashboard
-                    </DropdownMenuItem>
-                  )}
-                  <DropdownMenuItem onClick={handleLogout}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Logout
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <Button onClick={() => navigate('/auth')} variant="default">
-                Sign In
-              </Button>
-            )}
-          </div>
-
-          {/* Mobile Actions - Only Hamburger Menu */}
-          <div className="flex md:hidden items-center">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="glass-button rounded-full"
-            >
-              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </Button>
-          </div>
-        </div>
-
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden py-4 space-y-4 animate-fade-in glass-card mx-4 rounded-2xl mt-2 mb-4">
-            {/* Cart Item at Top */}
-            <Link
-              to="/cart"
-              className="flex items-center justify-between px-4 py-3 hover:bg-accent/10 transition-colors rounded-xl mx-2"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              <span className="text-sm font-medium flex items-center gap-2">
-                <ShoppingCart className="h-4 w-4" />
-                Cart
-              </span>
-              {cartCount > 0 && (
-                <span className="bg-accent text-accent-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {cartCount}
-                </span>
-              )}
-            </Link>
-            <div className="h-px bg-border mx-4" />
-            <div className="flex items-center justify-between px-4">
-              <span className="text-sm font-medium">Theme</span>
-              <ThemeToggle />
-            </div>
-            <Link
-              to="/"
-              className="block px-4 text-sm font-medium hover:text-accent transition-colors"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Home
-            </Link>
-            <Collapsible open={shopOpen} onOpenChange={setShopOpen}>
-              <CollapsibleTrigger className="flex items-center justify-between px-4 text-left w-full text-sm font-medium hover:text-accent transition-colors">
-                <span>Catalog</span>
-                <ChevronDown className={`h-4 w-4 transition-transform ${shopOpen ? 'rotate-180' : ''}`} />
-              </CollapsibleTrigger>
-              <CollapsibleContent className="pl-8 space-y-2 pt-2">
-                <Link
-                  to="/shop"
-                  className="block px-4 text-sm hover:text-accent transition-colors py-1"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  All Products
-                </Link>
-                {categories.map((category) => (
-                  <Link
-                    key={category.id}
-                    to={`/shop?category=${category.slug}`}
-                    className="block px-4 text-sm hover:text-accent transition-colors py-1"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {category.name}
-                  </Link>
-                ))}
-              </CollapsibleContent>
-            </Collapsible>
-            <Link
-              to="/about"
-              className="block px-4 text-sm font-medium hover:text-accent transition-colors"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              About
-            </Link>
-            <Link
-              to="/contact"
-              className="block px-4 text-sm font-medium hover:text-accent transition-colors"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Contact
-            </Link>
-            {user ? (
-              <>
-                <Link
-                  to="/orders"
-                  className="block px-4 text-sm font-medium hover:text-accent transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  My Orders
-                </Link>
-                {isAdmin && (
-                  <Link
-                    to="/admin"
-                    className="block px-4 text-sm font-medium hover:text-accent transition-colors"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Admin Dashboard
-                  </Link>
-                )}
-                <button
-                  onClick={() => {
-                    handleLogout();
-                    setMobileMenuOpen(false);
-                  }}
-                  className="block px-4 text-left w-full text-sm font-medium hover:text-accent transition-colors"
-                >
-                  Logout
-                </button>
-              </>
-            ) : (
-              <Button
-                onClick={() => {
-                  navigate('/auth');
-                  setMobileMenuOpen(false);
-                }}
-                variant="default"
-                className="w-full"
-              >
-                Sign In
-              </Button>
-            )}
-          </div>
-        )}
-      </nav>
-    </>
-  );
+            </nav>
+        </>
+    );
 };

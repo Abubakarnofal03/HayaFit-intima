@@ -19,7 +19,7 @@ export const SaleTimer = () => {
         .select('*')
         .eq('is_active', true)
         .order('sort_order', { ascending: true });
-      
+
       if (error) throw error;
       return data || [];
     },
@@ -52,7 +52,7 @@ export const SaleTimer = () => {
 
     const calculateTimeLeft = () => {
       const difference = new Date(currentBar.end_date).getTime() - new Date().getTime();
-      
+
       if (difference <= 0) {
         setTimeLeft(null);
         return;
@@ -77,7 +77,7 @@ export const SaleTimer = () => {
   const currentBar = promotionalBars[currentIndex];
 
   const barContent = (
-    <div 
+    <div
       className="py-2 px-4 text-center transition-colors"
       style={{
         backgroundColor: currentBar.background_color,

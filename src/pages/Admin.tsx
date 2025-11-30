@@ -40,17 +40,17 @@ import * as XLSX from 'xlsx';
 const formatPhoneForWhatsApp = (phone: string): string => {
   // Remove all non-numeric characters
   const cleaned = phone.replace(/\D/g, '');
-  
+
   // If starts with 0, replace with 92 (Pakistan country code)
   if (cleaned.startsWith('0')) {
     return '92' + cleaned.slice(1);
   }
-  
+
   // If already has country code
   if (cleaned.startsWith('92')) {
     return cleaned;
   }
-  
+
   // Add country code
   return '92' + cleaned;
 };
@@ -87,7 +87,7 @@ const sendWhatsAppConfirmation = (order: any) => {
   const message = generateWhatsAppMessage(order);
   const encodedMessage = encodeURIComponent(message);
   const whatsappUrl = `https://web.whatsapp.com/send?phone=${formattedPhone}&text=${encodedMessage}`;
-  
+
   window.open(whatsappUrl, '_blank');
 };
 
@@ -131,9 +131,9 @@ const Admin = () => {
   const [customEndDate, setCustomEndDate] = useState<Date | undefined>(undefined);
   const [customStatusFilter, setCustomStatusFilter] = useState<string>("all");
   const [customProductFilter, setCustomProductFilter] = useState<string>("all");
-  const [editingOrderItem, setEditingOrderItem] = useState<{ 
-    itemId: string; 
-    quantity: number; 
+  const [editingOrderItem, setEditingOrderItem] = useState<{
+    itemId: string;
+    quantity: number;
     price: number;
     variationId: string | null;
     colorId: string | null;
@@ -171,7 +171,7 @@ const Admin = () => {
       .eq('user_id', userId)
       .eq('role', 'admin')
       .maybeSingle();
-    
+
     if (!data) {
       navigate('/');
       toast({
@@ -215,7 +215,7 @@ const Admin = () => {
         },
         (payload) => {
           const newOrder = payload.new as any;
-          
+
           // Show browser notification
           if ('Notification' in window && Notification.permission === 'granted') {
             const notification = new Notification('New Order Arrived! 🎉', {
@@ -292,14 +292,14 @@ const Admin = () => {
         .from('orders')
         .select('*, order_items(*, products(*, product_variations(*)))', { count: 'exact' })
         .order('created_at', { ascending: false });
-      
+
       // Only apply pagination if not "all"
       if (ordersPageSize !== 'all') {
         const from = (ordersPage - 1) * ordersPageSize;
         const to = from + ordersPageSize - 1;
         query = query.range(from, to);
       }
-      
+
       const { data, error, count } = await query;
       if (error) throw error;
       return { orders: data, totalCount: count || 0 };
@@ -496,16 +496,16 @@ const Admin = () => {
   });
 
   const updateOrderItem = useMutation({
-    mutationFn: async ({ 
-      itemId, 
-      quantity, 
+    mutationFn: async ({
+      itemId,
+      quantity,
       price,
       variationId,
       colorId,
       orderId
-    }: { 
-      itemId: string; 
-      quantity: number; 
+    }: {
+      itemId: string;
+      quantity: number;
       price: number;
       variationId: string | null;
       colorId: string | null;
@@ -546,8 +546,8 @@ const Admin = () => {
       // Update order item
       const { error } = await supabase
         .from('order_items')
-        .update({ 
-          quantity, 
+        .update({
+          quantity,
           price,
           variation_id: variationId,
           variation_name: variationName,
@@ -565,7 +565,7 @@ const Admin = () => {
         .from('order_items')
         .select('price, quantity')
         .eq('order_id', orderId);
-      
+
       if (orderItems) {
         const newTotal = orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
         await supabase
@@ -594,7 +594,7 @@ const Admin = () => {
         .from('order_items')
         .select('price, quantity')
         .eq('order_id', orderId);
-      
+
       if (orderItems && orderItems.length > 0) {
         const newTotal = orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
         await supabase
@@ -692,12 +692,12 @@ const Admin = () => {
     }
 
     let filteredOrders = orders;
-    
+
     // Apply status filter
     if (instaStatusFilter !== "all") {
       filteredOrders = filteredOrders.filter(order => order.status === instaStatusFilter);
     }
-    
+
     // Apply product filter
     if (instaProductFilter !== "all") {
       filteredOrders = filteredOrders.filter(order => {
@@ -705,7 +705,7 @@ const Admin = () => {
         return orderItems.some((item: any) => item.product_id === instaProductFilter);
       });
     }
-    
+
     // Apply date filter
     if (filterByDate && instaStartDate && instaEndDate) {
       filteredOrders = filteredOrders.filter((order) => {
@@ -738,7 +738,7 @@ const Admin = () => {
         const variationInfo = item.variation_name ? ` - ${item.variation_name}` : '';
         const colorInfo = item.color_name ? ` - ${item.color_name}` : '';
         const itemTitle = `${product?.name || 'N/A'}${variationInfo}${colorInfo}`;
-        
+
         return {
           ref_no: order.order_number,
           consignee_first_name: order.first_name,
@@ -769,16 +769,16 @@ const Admin = () => {
 
     const csvContent = [
       headers.join(","),
-      ...csvData.map(row => 
+      ...csvData.map(row =>
         headers.map(header => {
           let value = row[header as keyof typeof row]?.toString() || "";
-          
+
           // Remove line breaks and carriage returns that break CSV format
           value = value.replace(/[\r\n]+/g, ' ').trim();
-          
+
           // Escape quotes by doubling them
           value = value.replace(/"/g, '""');
-          
+
           // Always wrap fields in quotes to prevent CSV issues
           return `"${value}"`;
         }).join(",")
@@ -790,8 +790,8 @@ const Admin = () => {
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
     link.setAttribute("href", url);
-    
-    const dateRangeStr = filterByDate && instaStartDate && instaEndDate 
+
+    const dateRangeStr = filterByDate && instaStartDate && instaEndDate
       ? `_${format(instaStartDate, 'yyyy-MM-dd')}_to_${format(instaEndDate, 'yyyy-MM-dd')}`
       : '';
     const fileName = `insta_world_orders${dateRangeStr}_${format(new Date(), 'yyyy-MM-dd_HH-mm')}.csv`;
@@ -805,7 +805,7 @@ const Admin = () => {
     setInstaStartDate(undefined);
     setInstaEndDate(undefined);
     setInstaStatusFilter("all");
-    
+
     toast({
       title: "Export successful",
       description: `Downloaded ${filteredOrders.length} orders to ${fileName}`,
@@ -828,12 +828,12 @@ const Admin = () => {
     }
 
     let filteredOrders = orders;
-    
+
     // Apply status filter
     if (customStatusFilter !== "all") {
       filteredOrders = filteredOrders.filter(order => order.status === customStatusFilter);
     }
-    
+
     // Apply product filter
     if (customProductFilter !== "all") {
       filteredOrders = filteredOrders.filter(order => {
@@ -841,7 +841,7 @@ const Admin = () => {
         return orderItems.some((item: any) => item.product_id === customProductFilter);
       });
     }
-    
+
     // Apply date filter
     if (filterByDate && customStartDate && customEndDate) {
       filteredOrders = filteredOrders.filter((order) => {
@@ -869,29 +869,29 @@ const Admin = () => {
     // Create CSV data - one row per order
     const csvData = filteredOrders.map((order) => {
       const orderItems = order.order_items || [];
-      
+
       // Calculate total quantity
       const totalQuantity = orderItems.reduce((sum: number, item: any) => sum + item.quantity, 0);
-      
+
       // Calculate total booking weight
       const totalWeight = orderItems.reduce((sum: number, item: any) => {
         const product = products?.find(p => p.id === item.product_id);
         const weight = product?.weight_kg || 0;
         return sum + (weight * item.quantity);
       }, 0);
-      
+
       // Build order detail with item names and variations
       const orderDetail = orderItems.map((item: any) => {
         const product = products?.find(p => p.id === item.product_id);
         let itemDetail = `${product?.name || 'Unknown Product'} (${item.quantity}x)`;
-        
+
         if (item.variation_name) {
           itemDetail += ` - ${item.variation_name}`;
         }
         if (item.color_name) {
           itemDetail += ` - ${item.color_name}`;
         }
-        
+
         return itemDetail;
       }).join('; ');
 
@@ -923,7 +923,7 @@ const Admin = () => {
 
     const csvContent = [
       headers.join(","),
-      ...csvData.map(row => 
+      ...csvData.map(row =>
         [
           row.order_reference,
           row.order_amount,
@@ -941,13 +941,13 @@ const Admin = () => {
           row.booking_weight,
         ].map(value => {
           let strValue = value?.toString() || "";
-          
+
           // Remove line breaks and carriage returns
           strValue = strValue.replace(/[\r\n]+/g, ' ').trim();
-          
+
           // Escape quotes by doubling them
           strValue = strValue.replace(/"/g, '""');
-          
+
           // Always wrap fields in quotes
           return `"${strValue}"`;
         }).join(",")
@@ -959,8 +959,8 @@ const Admin = () => {
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
     link.setAttribute("href", url);
-    
-    const dateRangeStr = filterByDate && customStartDate && customEndDate 
+
+    const dateRangeStr = filterByDate && customStartDate && customEndDate
       ? `_${format(customStartDate, 'yyyy-MM-dd')}_to_${format(customEndDate, 'yyyy-MM-dd')}`
       : '';
     const fileName = `custom_orders${dateRangeStr}_${format(new Date(), 'yyyy-MM-dd_HH-mm')}.csv`;
@@ -975,7 +975,7 @@ const Admin = () => {
     setCustomEndDate(undefined);
     setCustomStatusFilter("all");
     setCustomProductFilter("all");
-    
+
     toast({
       title: "Export successful",
       description: `Downloaded ${filteredOrders.length} orders to ${fileName}`,
@@ -1003,12 +1003,12 @@ const Admin = () => {
     }
 
     let filteredOrders = ordersToProcess;
-    
+
     // Apply status filter
     if (exportStatusFilter !== "all") {
       filteredOrders = filteredOrders.filter(order => order.status === exportStatusFilter);
     }
-    
+
     // Apply date filter
     if (filterByDate && startDate && endDate) {
       filteredOrders = filteredOrders.filter((order) => {
@@ -1062,8 +1062,8 @@ const Admin = () => {
     const worksheet = XLSX.utils.json_to_sheet(exportData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Orders');
-    
-    const dateRangeStr = filterByDate && startDate && endDate 
+
+    const dateRangeStr = filterByDate && startDate && endDate
       ? `_${format(startDate, 'yyyy-MM-dd')}_to_${format(endDate, 'yyyy-MM-dd')}`
       : '';
     const fileName = `orders${dateRangeStr}_${format(new Date(), 'yyyy-MM-dd_HH-mm')}.xlsx`;
@@ -1073,7 +1073,7 @@ const Admin = () => {
       title: "Export successful",
       description: `Downloaded ${filteredOrders.length} orders to ${fileName}`,
     });
-    
+
     setExportDialog(false);
     setStartDate(undefined);
     setEndDate(undefined);
@@ -1083,13 +1083,13 @@ const Admin = () => {
   const filteredOrders = orders?.filter(order => {
     const matchesStatus = statusFilter === "all" || order.status === statusFilter;
     const matchesProduct = productFilter === "all" || order.order_items?.some((item: any) => item.product_id === productFilter);
-    const matchesSearch = !searchQuery || 
+    const matchesSearch = !searchQuery ||
       order.order_number.toString().includes(searchQuery) ||
       order.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       order.last_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       order.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       order.phone.includes(searchQuery) ||
-      order.order_items?.some((item: any) => 
+      order.order_items?.some((item: any) =>
         item.products?.name?.toLowerCase().includes(searchQuery.toLowerCase())
       );
     return matchesStatus && matchesProduct && matchesSearch;
@@ -1114,7 +1114,7 @@ const Admin = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      
+
       <main className="flex-1 py-12">
         <div className="container mx-auto px-4">
           <h1 className="font-display text-4xl font-bold mb-8 text-center gold-accent pb-8">
@@ -1247,7 +1247,7 @@ const Admin = () => {
                   </div>
                 </CardContent>
               </Card>
-              
+
               {filteredOrders.length > 0 && (
                 <Card className="mb-4">
                   <CardContent className="pt-6">
@@ -1268,7 +1268,7 @@ const Admin = () => {
                           )}
                         </label>
                       </div>
-                      
+
                       {selectedOrders.size > 0 && (
                         <div className="flex items-center gap-2">
                           <span className="text-sm text-muted-foreground">Bulk actions:</span>
@@ -1297,15 +1297,15 @@ const Admin = () => {
                   {statusFilter !== "all" && <span className="ml-1">({statusFilter})</span>}
                 </p>
               </div>
-              
+
               {filteredOrders.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground">
                   No orders match your filters
                 </div>
               ) : null}
-              
+
               {filteredOrders.map((order, index) => (
-                <Collapsible 
+                <Collapsible
                   key={order.id}
                   open={expandedOrders.has(order.id)}
                   onOpenChange={() => toggleOrderExpanded(order.id)}
@@ -1435,8 +1435,8 @@ const Admin = () => {
                                             {itemColors.map(c => (
                                               <SelectItem key={c.id} value={c.id}>
                                                 <div className="flex items-center gap-2">
-                                                  <span 
-                                                    className="inline-block w-3 h-3 rounded-full border" 
+                                                  <span
+                                                    className="inline-block w-3 h-3 rounded-full border"
                                                     style={{ backgroundColor: c.color_code }}
                                                   />
                                                   {c.name}
@@ -1486,8 +1486,8 @@ const Admin = () => {
                                       {item.color_name && (
                                         <Badge variant="outline" className="text-xs flex items-center gap-1">
                                           {item.color_code && (
-                                            <span 
-                                              className="inline-block w-3 h-3 rounded-full border" 
+                                            <span
+                                              className="inline-block w-3 h-3 rounded-full border"
                                               style={{ backgroundColor: item.color_code }}
                                             />
                                           )}
@@ -1853,12 +1853,12 @@ const Admin = () => {
                   <Pagination>
                     <PaginationContent>
                       <PaginationItem>
-                        <PaginationPrevious 
+                        <PaginationPrevious
                           onClick={() => setOrdersPage(p => Math.max(1, p - 1))}
                           className={ordersPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
                         />
                       </PaginationItem>
-                      
+
                       {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                         let pageNum;
                         if (totalPages <= 5) {
@@ -1870,7 +1870,7 @@ const Admin = () => {
                         } else {
                           pageNum = ordersPage - 2 + i;
                         }
-                        
+
                         return (
                           <PaginationItem key={pageNum}>
                             <PaginationLink
@@ -1883,9 +1883,9 @@ const Admin = () => {
                           </PaginationItem>
                         );
                       })}
-                      
+
                       <PaginationItem>
-                        <PaginationNext 
+                        <PaginationNext
                           onClick={() => setOrdersPage(p => Math.min(totalPages, p + 1))}
                           className={ordersPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
                         />
@@ -1898,6 +1898,7 @@ const Admin = () => {
 
             <TabsContent value="analytics">
               <div className="space-y-8">
+                {/* Analytics paused to save egress
                 <SiteAnalytics />
                 <div className="border-t pt-8">
                   <h3 className="text-xl font-bold mb-4">Order Analytics</h3>
@@ -1909,6 +1910,10 @@ const Admin = () => {
                     selectedProduct={selectedProduct}
                     setSelectedProduct={setSelectedProduct}
                   />
+                </div>
+                */}
+                <div className="p-8 text-center text-muted-foreground">
+                  Analytics are currently paused.
                 </div>
               </div>
             </TabsContent>
@@ -1961,11 +1966,11 @@ const Admin = () => {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => setDeleteDialog({ 
-                                open: true, 
-                                type: "products", 
-                                id: product.id, 
-                                name: product.name 
+                              onClick={() => setDeleteDialog({
+                                open: true,
+                                type: "products",
+                                id: product.id,
+                                name: product.name
                               })}
                             >
                               <Trash2 className="h-4 w-4 text-destructive" />
@@ -1982,11 +1987,11 @@ const Admin = () => {
                 products={products || []}
                 categories={categories || []}
                 onEdit={(product) => setProductDialog({ open: true, product })}
-                onDelete={(product) => setDeleteDialog({ 
-                  open: true, 
-                  type: "products", 
-                  id: product.id, 
-                  name: product.name 
+                onDelete={(product) => setDeleteDialog({
+                  open: true,
+                  type: "products",
+                  id: product.id,
+                  name: product.name
                 })}
               />
             </TabsContent>
@@ -2028,11 +2033,11 @@ const Admin = () => {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => setDeleteDialog({ 
-                                open: true, 
-                                type: "categories", 
-                                id: category.id, 
-                                name: category.name 
+                              onClick={() => setDeleteDialog({
+                                open: true,
+                                type: "categories",
+                                id: category.id,
+                                name: category.name
                               })}
                             >
                               <Trash2 className="h-4 w-4 text-destructive" />
@@ -2229,11 +2234,11 @@ const Admin = () => {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => setDeleteDialog({ 
-                                open: true, 
-                                type: "banners", 
-                                id: banner.id, 
-                                name: banner.title 
+                              onClick={() => setDeleteDialog({
+                                open: true,
+                                type: "banners",
+                                id: banner.id,
+                                name: banner.title
                               })}
                             >
                               <Trash2 className="h-4 w-4 text-destructive" />
@@ -2257,7 +2262,7 @@ const Admin = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">
-                    Create rotating promotional messages that appear at the top of your site. 
+                    Create rotating promotional messages that appear at the top of your site.
                     Add sale announcements, countdown timers, and special offers that automatically rotate.
                   </p>
                 </CardContent>
@@ -2307,11 +2312,11 @@ const Admin = () => {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => setDeleteDialog({ 
-                                open: true, 
-                                type: "blogs", 
-                                id: blog.id, 
-                                name: blog.title 
+                              onClick={() => setDeleteDialog({
+                                open: true,
+                                type: "blogs",
+                                id: blog.id,
+                                name: blog.title
                               })}
                             >
                               <Trash2 className="h-4 w-4 text-destructive" />
@@ -2431,7 +2436,7 @@ const Admin = () => {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Start Date (Optional)</label>
@@ -2502,8 +2507,8 @@ const Admin = () => {
       </AlertDialog>
 
       {/* INSTA WORLD Export Dialog */}
-      <AlertDialog 
-        open={instaWorldDialog} 
+      <AlertDialog
+        open={instaWorldDialog}
         onOpenChange={(open) => {
           setInstaWorldDialog(open);
           if (!open) {
@@ -2555,7 +2560,7 @@ const Admin = () => {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Start Date (Optional)</label>
