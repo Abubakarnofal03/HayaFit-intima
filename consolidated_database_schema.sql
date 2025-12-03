@@ -52,6 +52,21 @@ CREATE TABLE public.categories (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Subcategories Table
+CREATE TABLE public.subcategories (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  parent_category_id UUID NOT NULL REFERENCES public.categories(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  slug TEXT NOT NULL UNIQUE,
+  description TEXT,
+  image_url TEXT,
+  meta_title TEXT,
+  meta_description TEXT,
+  focus_keywords TEXT[],
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Products Table
 CREATE TABLE public.products (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -67,6 +82,10 @@ CREATE TABLE public.products (
   video_url TEXT,
   shipping_cost NUMERIC DEFAULT 0,
   weight_kg NUMERIC,
+  premium_layout BOOLEAN DEFAULT FALSE,
+  sort_order INTEGER DEFAULT 0,
+  banner_image TEXT[] DEFAULT '{}'::TEXT[],
+  subcategory_id UUID REFERENCES public.subcategories(id) ON DELETE SET NULL,
   meta_title TEXT,
   meta_description TEXT,
   focus_keywords TEXT[],
@@ -110,6 +129,19 @@ CREATE TABLE public.product_colors (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Product Sizes Table
+CREATE TABLE public.product_sizes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  product_id UUID NOT NULL REFERENCES public.products(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  price NUMERIC NOT NULL DEFAULT 0,
+  quantity INTEGER DEFAULT 0,
+  apply_sale BOOLEAN DEFAULT TRUE,
+  sort_order INTEGER DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Reviews Table
 CREATE TABLE public.reviews (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -119,6 +151,7 @@ CREATE TABLE public.reviews (
   review_title TEXT NOT NULL,
   review_text TEXT NOT NULL,
   rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+  user_id UUID REFERENCES auth.users(id),
   is_verified BOOLEAN DEFAULT FALSE,
   review_images TEXT[] DEFAULT '{}'::TEXT[],
   review_date TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -179,6 +212,33 @@ CREATE TABLE public.settings (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Promotional Bars Table
+CREATE TABLE public.promotional_bars (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL,
+  background_color TEXT NOT NULL DEFAULT 'hsl(var(--destructive))',
+  text_color TEXT NOT NULL DEFAULT 'hsl(var(--destructive-foreground))',
+  icon TEXT DEFAULT '🔥',
+  link_url TEXT,
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  show_countdown BOOLEAN NOT NULL DEFAULT false,
+  end_date TIMESTAMP WITH TIME ZONE,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Analytics Events Table
+CREATE TABLE public.analytics_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  event_type TEXT NOT NULL,
+  page_path TEXT,
+  user_id UUID,
+  session_id TEXT NOT NULL,
+  metadata JSONB DEFAULT '{}'::jsonb,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Orders Table
 CREATE TABLE public.orders (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -215,6 +275,9 @@ CREATE TABLE public.order_items (
   color_name TEXT,
   color_code TEXT,
   color_price NUMERIC,
+  size_id UUID REFERENCES public.product_sizes(id),
+  size_name TEXT,
+  size_price NUMERIC,
   quantity INTEGER NOT NULL,
   price NUMERIC NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -232,6 +295,9 @@ CREATE TABLE public.cart_items (
   color_name TEXT,
   color_code TEXT,
   color_price NUMERIC,
+  size_id UUID REFERENCES public.product_sizes(id),
+  size_name TEXT,
+  size_price NUMERIC,
   quantity INTEGER DEFAULT 1,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -357,6 +423,16 @@ CREATE TRIGGER update_product_colors_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION public.update_updated_at_column();
 
+CREATE TRIGGER update_product_sizes_updated_at
+  BEFORE UPDATE ON public.product_sizes
+  FOR EACH ROW
+  EXECUTE FUNCTION public.update_updated_at_column();
+
+CREATE TRIGGER update_promotional_bars_updated_at
+  BEFORE UPDATE ON public.promotional_bars
+  FOR EACH ROW
+  EXECUTE FUNCTION public.update_updated_at_column();
+
 -- ============================================================================
 -- ROW LEVEL SECURITY (RLS)
 -- ============================================================================
@@ -377,6 +453,9 @@ ALTER TABLE public.settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.order_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.cart_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.product_sizes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.promotional_bars ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.analytics_events ENABLE ROW LEVEL SECURITY;
 
 -- Profiles Policies
 CREATE POLICY "Users can view own profile"
@@ -407,6 +486,15 @@ CREATE POLICY "Anyone can view categories"
 
 CREATE POLICY "Admins can manage categories"
   ON public.categories FOR ALL
+  USING (public.has_role(auth.uid(), 'admin'));
+
+-- Subcategories Policies
+CREATE POLICY "Anyone can view subcategories"
+  ON public.subcategories FOR SELECT
+  USING (true);
+
+CREATE POLICY "Admins can manage subcategories"
+  ON public.subcategories FOR ALL
   USING (public.has_role(auth.uid(), 'admin'));
 
 -- Products Policies
@@ -445,14 +533,27 @@ CREATE POLICY "Admins can manage product colors"
   ON public.product_colors FOR ALL
   USING (public.has_role(auth.uid(), 'admin'));
 
--- Reviews Policies
-CREATE POLICY "Anyone can view reviews"
-  ON public.reviews FOR SELECT
+-- Product Sizes Policies
+CREATE POLICY "Anyone can view product sizes"
+  ON public.product_sizes FOR SELECT
   USING (true);
 
+CREATE POLICY "Admins can manage product sizes"
+  ON public.product_sizes FOR ALL
+  USING (public.has_role(auth.uid(), 'admin'));
+
+-- Reviews Policies
 CREATE POLICY "Admins can manage reviews"
   ON public.reviews FOR ALL
   USING (public.has_role(auth.uid(), 'admin'));
+
+CREATE POLICY "Anyone can view approved reviews"
+  ON public.reviews FOR SELECT
+  USING (is_verified = true);
+
+CREATE POLICY "Authenticated users can submit reviews"
+  ON public.reviews FOR INSERT
+  WITH CHECK (auth.uid() = user_id AND is_verified = false);
 
 -- Sales Policies
 CREATE POLICY "Anyone can view active sales"
@@ -488,6 +589,24 @@ CREATE POLICY "Anyone can view settings"
 
 CREATE POLICY "Admins can manage settings"
   ON public.settings FOR ALL
+  USING (public.has_role(auth.uid(), 'admin'));
+
+-- Promotional Bars Policies
+CREATE POLICY "Anyone can view active promotional bars"
+  ON public.promotional_bars FOR SELECT
+  USING (is_active = true);
+
+CREATE POLICY "Admins can manage promotional bars"
+  ON public.promotional_bars FOR ALL
+  USING (public.has_role(auth.uid(), 'admin'));
+
+-- Analytics Events Policies
+CREATE POLICY "Anyone can insert analytics events"
+  ON public.analytics_events FOR INSERT
+  WITH CHECK (true);
+
+CREATE POLICY "Admins can view analytics"
+  ON public.analytics_events FOR SELECT
   USING (public.has_role(auth.uid(), 'admin'));
 
 -- Orders Policies
@@ -584,11 +703,46 @@ CREATE POLICY "Admins can delete store images"
     AND public.has_role(auth.uid(), 'admin')
   );
 
+-- Storage policies for reviews (in store-images bucket)
+CREATE POLICY "Authenticated users can upload review images"
+  ON storage.objects FOR INSERT
+  WITH CHECK (
+    bucket_id = 'store-images' 
+    AND (storage.foldername(name))[1] = 'reviews'
+    AND auth.role() = 'authenticated'
+  );
+
+CREATE POLICY "Anyone can view review images"
+  ON storage.objects FOR SELECT
+  USING (
+    bucket_id = 'store-images' 
+    AND (storage.foldername(name))[1] = 'reviews'
+  );
+
+CREATE POLICY "Users can update review images"
+  ON storage.objects FOR UPDATE
+  USING (
+    bucket_id = 'store-images' 
+    AND (storage.foldername(name))[1] = 'reviews'
+    AND auth.role() = 'authenticated'
+  );
+
+CREATE POLICY "Users can delete review images"
+  ON storage.objects FOR DELETE
+  USING (
+    bucket_id = 'store-images' 
+    AND (storage.foldername(name))[1] = 'reviews'
+    AND auth.role() = 'authenticated'
+  );
+
 -- ============================================================================
 -- INDEXES (for better performance)
 -- ============================================================================
 
 CREATE INDEX idx_products_category_id ON public.products(category_id);
+CREATE INDEX idx_products_subcategory_id ON public.products(subcategory_id);
+CREATE INDEX idx_subcategories_parent_category_id ON public.subcategories(parent_category_id);
+CREATE INDEX idx_subcategories_slug ON public.subcategories(slug);
 CREATE INDEX idx_products_slug ON public.products(slug);
 CREATE INDEX idx_orders_user_id ON public.orders(user_id);
 CREATE INDEX idx_orders_status ON public.orders(status);
@@ -598,6 +752,12 @@ CREATE INDEX idx_reviews_product_id ON public.reviews(product_id);
 CREATE INDEX idx_sales_product_id ON public.sales(product_id);
 CREATE INDEX idx_product_variations_product_id ON public.product_variations(product_id);
 CREATE INDEX idx_product_colors_product_id ON public.product_colors(product_id);
+CREATE INDEX idx_product_sizes_product_id ON public.product_sizes(product_id);
+CREATE INDEX idx_products_premium_layout ON public.products(premium_layout) WHERE premium_layout = true;
+CREATE INDEX idx_analytics_events_created_at ON public.analytics_events(created_at DESC);
+CREATE INDEX idx_analytics_events_event_type ON public.analytics_events(event_type);
+CREATE INDEX idx_analytics_events_session_id ON public.analytics_events(session_id);
+CREATE INDEX idx_analytics_events_page_path ON public.analytics_events(page_path);
 
 -- ============================================================================
 -- COMPLETE!
