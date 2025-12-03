@@ -25,6 +25,15 @@ const getGoogleCategory = (categoryName: string | null): string => {
   return categoryMap[categoryName] || "632";
 };
 
+const escapeCsvField = (field: any): string => {
+  if (field === null || field === undefined) return '';
+  const stringField = String(field);
+  if (stringField.includes(',') || stringField.includes('"') || stringField.includes('\n')) {
+    return `"${stringField.replace(/"/g, '""')}"`;
+  }
+  return stringField;
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -37,10 +46,15 @@ serve(async (req) => {
 
     console.log('Fetching products for TikTok feed...');
 
-    // Fetch products with categories
+    // Fetch products with categories, sizes, and colors
     const { data: products, error } = await supabase
       .from('products')
-      .select('*, categories(name)')
+      .select(`
+        *,
+        categories(name),
+        product_sizes(name),
+        product_colors(name)
+      `)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -50,13 +64,13 @@ serve(async (req) => {
 
     console.log(`Found ${products?.length || 0} products`);
 
-    const storeDomain = "hayafitintima.store";
-    const brandName = "HayaFit Intima";
+    const storeDomain = "theshoppingcart.shop";
+    const brandName = "The Shopping Cart";
     const currency = "PKR";
 
-    // TSV Header
+    // TikTok Catalog CSV Headers (Standard 45 columns)
     const headers = [
-      'id',
+      'sku_id',
       'title',
       'description',
       'availability',
@@ -67,10 +81,43 @@ serve(async (req) => {
       'brand',
       'google_product_category',
       'product_type',
-      'additional_image_link'
+      'item_group_id',
+      'size',
+      'color',
+      'gender',
+      'age_group',
+      'material',
+      'pattern',
+      'sale_price',
+      'additional_image_link',
+      'custom_label_0',
+      'custom_label_1',
+      'custom_label_2',
+      'custom_label_3',
+      'custom_label_4',
+      'shipping',
+      'tax',
+      'shipping_weight',
+      'shipping_height',
+      'shipping_width',
+      'shipping_length',
+      'shipping_label',
+      'multipack',
+      'is_bundle',
+      'adult',
+      'identifier_exists',
+      'gtin',
+      'mpn',
+      'ios_url',
+      'ios_app_store_id',
+      'ios_app_name',
+      'android_url',
+      'android_package',
+      'android_app_name',
+      'fb_product_category'
     ];
 
-    // Generate TSV rows
+    // Generate CSV rows
     const rows = products?.map((product: any) => {
       const categoryName = product.categories?.name || '';
       const availability = (product.stock_quantity || 0) > 0 ? 'in_stock' : 'out_of_stock';
@@ -78,12 +125,16 @@ serve(async (req) => {
       const mainImage = product.images?.[0] || '';
       const additionalImages = product.images?.slice(1, 4).join(',') || '';
 
-      // Clean description (remove newlines and tabs for TSV)
+      // Get sizes and colors as comma-separated strings
+      const sizes = product.product_sizes?.map((s: any) => s.name).join(',') || '';
+      const colors = product.product_colors?.map((c: any) => c.name).join(',') || '';
+
+      // Clean description
       const cleanDescription = (product.description || '')
         .replace(/[\t\n\r]/g, ' ')
         .replace(/\s+/g, ' ')
         .trim()
-        .substring(0, 500);
+        .substring(0, 5000); // TikTok limit is higher than 500
 
       // Clean title
       const cleanTitle = (product.name || '')
@@ -92,31 +143,64 @@ serve(async (req) => {
         .trim();
 
       return [
-        product.id,
-        cleanTitle,
-        cleanDescription,
-        availability,
-        'new',
-        `${product.price} ${currency}`,
-        productUrl,
-        mainImage,
-        brandName,
-        getGoogleCategory(categoryName),
-        categoryName,
-        additionalImages
-      ].join('\t');
+        product.id, // sku_id
+        cleanTitle, // title
+        cleanDescription, // description
+        availability, // availability
+        'new', // condition
+        `${product.price} ${currency}`, // price
+        productUrl, // link
+        mainImage, // image_link
+        brandName, // brand
+        getGoogleCategory(categoryName), // google_product_category
+        categoryName, // product_type
+        product.id, // item_group_id (using same as ID for now as we aren't exploding variants)
+        sizes, // size
+        colors, // color
+        'female', // gender (assuming based on store type, or make dynamic)
+        'adult', // age_group
+        '', // material
+        '', // pattern
+        '', // sale_price
+        additionalImages, // additional_image_link
+        '', // custom_label_0
+        '', // custom_label_1
+        '', // custom_label_2
+        '', // custom_label_3
+        '', // custom_label_4
+        '', // shipping
+        '', // tax
+        product.weight_kg ? `${product.weight_kg} kg` : '', // shipping_weight
+        '', // shipping_height
+        '', // shipping_width
+        '', // shipping_length
+        '', // shipping_label
+        '', // multipack
+        '', // is_bundle
+        'no', // adult
+        'no', // identifier_exists
+        '', // gtin
+        '', // mpn
+        '', // ios_url
+        '', // ios_app_store_id
+        '', // ios_app_name
+        '', // android_url
+        '', // android_package
+        '', // android_app_name
+        ''  // fb_product_category
+      ].map(escapeCsvField).join(',');
     }) || [];
 
     // Combine headers and rows
-    const tsvContent = [headers.join('\t'), ...rows].join('\n');
+    const csvContent = [headers.join(','), ...rows].join('\n');
 
-    console.log(`Generated TSV feed with ${rows.length} products`);
+    console.log(`Generated CSV feed with ${rows.length} products`);
 
-    return new Response(tsvContent, {
+    return new Response(csvContent, {
       headers: {
         ...corsHeaders,
-        'Content-Type': 'text/tab-separated-values; charset=utf-8',
-        'Content-Disposition': `attachment; filename="tiktok-catalog-feed-${new Date().toISOString().split('T')[0]}.tsv"`,
+        'Content-Type': 'text/csv; charset=utf-8',
+        'Content-Disposition': `attachment; filename="tiktok-catalog-feed-${new Date().toISOString().split('T')[0]}.csv"`,
       },
     });
 

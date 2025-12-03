@@ -27,14 +27,14 @@ export const TikTokFeedGenerator = () => {
         throw error;
       }
 
-      // Create blob from TSV data
-      const blob = new Blob([data], { type: 'text/tab-separated-values' });
+      // Create blob from CSV data
+      const blob = new Blob([data], { type: 'text/csv' });
       const url = window.URL.createObjectURL(blob);
 
       // Create download link
       const a = document.createElement('a');
       a.href = url;
-      a.download = `tiktok-catalog-feed-${new Date().toISOString().split('T')[0]}.tsv`;
+      a.download = `tiktok-catalog-feed-${new Date().toISOString().split('T')[0]}.csv`;
       document.body.appendChild(a);
       a.click();
 
@@ -42,7 +42,7 @@ export const TikTokFeedGenerator = () => {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
 
-      // Count products (approximate from TSV lines)
+      // Count products (subtract 1 header row)
       const lines = data.split('\n').filter((line: string) => line.trim());
       const productCount = Math.max(0, lines.length - 1); // Subtract header row
 
@@ -142,7 +142,7 @@ export const TikTokFeedGenerator = () => {
             <li className="pl-2">Go to <strong>TikTok Ads Manager</strong> → <strong>Assets</strong> → <strong>Catalog</strong></li>
             <li className="pl-2">Click <strong>"Create Catalog"</strong> or select existing catalog</li>
             <li className="pl-2">Choose <strong>"Data Feed"</strong> upload method</li>
-            <li className="pl-2">Upload the downloaded <strong>TSV file</strong></li>
+            <li className="pl-2">Upload the downloaded <strong>CSV file</strong></li>
             <li className="pl-2">TikTok will process your products (takes ~10-30 minutes)</li>
             <li className="pl-2">Re-generate and upload when products change</li>
           </ol>
@@ -163,13 +163,13 @@ export const TikTokFeedGenerator = () => {
           <h4 className="font-semibold">Configuration:</h4>
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div className="text-muted-foreground">Store Domain:</div>
-            <div className="font-mono">hayafitintima.store</div>
+            <div className="font-mono">theshoppingcart.shop</div>
             <div className="text-muted-foreground">Brand Name:</div>
-            <div>HayaFit Intima</div>
+            <div>The Shopping Cart</div>
             <div className="text-muted-foreground">Currency:</div>
             <div>PKR</div>
             <div className="text-muted-foreground">File Format:</div>
-            <div>TSV (Tab-Separated Values)</div>
+            <div>CSV (TikTok Standard with 45 columns)</div>
           </div>
         </div>
       </CardContent>
