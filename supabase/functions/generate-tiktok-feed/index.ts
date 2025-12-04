@@ -44,25 +44,33 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    console.log('Fetching products for TikTok feed...');
+    console.log('Fetching products and sales for TikTok feed...');
 
-    // Fetch products with categories, sizes, and colors
-    const { data: products, error } = await supabase
-      .from('products')
-      .select(`
-        *,
-        categories(name),
-        product_sizes(name),
-        product_colors(name)
-      `)
-      .order('created_at', { ascending: false });
+    // Fetch products and active sales
+    const [productsResponse, salesResponse] = await Promise.all([
+      supabase
+        .from('products')
+        .select(`
+          *,
+          categories(name),
+          product_sizes(name),
+          product_colors(name)
+        `)
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('sales')
+        .select('*')
+        .eq('is_active', true)
+        .gt('end_date', new Date().toISOString())
+    ]);
 
-    if (error) {
-      console.error('Error fetching products:', error);
-      throw error;
-    }
+    if (productsResponse.error) throw productsResponse.error;
+    if (salesResponse.error) throw salesResponse.error;
 
-    console.log(`Found ${products?.length || 0} products`);
+    const products = productsResponse.data;
+    const sales = salesResponse.data || [];
+
+    console.log(`Found ${products?.length || 0} products and ${sales.length} active sales`);
 
     const storeDomain = "hayafitintima.shop";
     const brandName = "HayaFit Intima";
@@ -120,10 +128,25 @@ serve(async (req) => {
     // Generate CSV rows
     const rows = products?.map((product: any) => {
       const categoryName = product.categories?.name || '';
-      const availability = (product.stock_quantity || 0) > 0 ? 'in_stock' : 'out_of_stock';
-      const productUrl = `https://${storeDomain}/product/${product.slug}`;
+      const availability = (product.stock_quantity || 0) > 0 ? 'in stock' : 'out of stock';
+      const productUrl = `https://hayafitintima.shop/product/${product.slug}`;
       const mainImage = product.images?.[0] || '';
       const additionalImages = product.images?.slice(1, 4).join(',') || '';
+
+      // Calculate Sale Price
+      const originalPrice = parseFloat(product.price);
+      let salePrice = null;
+
+      const productSale = sales.find((s: any) => s.product_id === product.id);
+      const globalSale = sales.find((s: any) => s.is_global);
+      const activeSale = productSale || globalSale;
+
+      if (activeSale) {
+        const discountAmount = (originalPrice * activeSale.discount_percentage) / 100;
+        salePrice = originalPrice - discountAmount;
+      }
+
+      const formattedSalePrice = salePrice ? `${Math.round(salePrice)} ${currency}` : '';
 
       // Get sizes and colors as comma-separated strings
       const sizes = product.product_sizes?.map((s: any) => s.name).join(',') || '';
@@ -161,7 +184,7 @@ serve(async (req) => {
         'adult', // age_group
         '', // material
         '', // pattern
-        '', // sale_price
+        formattedSalePrice, // sale_price
         additionalImages, // additional_image_link
         '', // custom_label_0
         '', // custom_label_1
