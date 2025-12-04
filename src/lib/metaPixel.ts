@@ -61,3 +61,27 @@ export const trackPurchase = (
     console.log('Meta Pixel: Purchase tracked', { totalAmount, orderId });
   }
 };
+
+/**
+ * Track View Content event
+ * @param productId - The product ID
+ * @param productName - The product name
+ * @param price - The product price
+ * @param currency - The currency code (default: PKR)
+ */
+export const trackViewContent = (
+  productId: string,
+  productName: string,
+  price: number,
+  currency: string = 'PKR'
+) => {
+  if (typeof window !== 'undefined' && window.fbq) {
+    window.fbq('track', 'ViewContent', {
+      content_ids: [productId],
+      content_name: productName,
+      value: price,
+      currency: currency,
+    });
+    console.log('Meta Pixel: ViewContent tracked', { productId, productName, price });
+  }
+};

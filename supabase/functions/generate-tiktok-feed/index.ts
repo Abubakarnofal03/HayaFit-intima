@@ -64,8 +64,8 @@ serve(async (req) => {
 
     console.log(`Found ${products?.length || 0} products`);
 
-    const storeDomain = "theshoppingcart.shop";
-    const brandName = "The Shopping Cart";
+    const storeDomain = "hayafitintima.shop";
+    const brandName = "HayaFit Intima";
     const currency = "PKR";
 
     // TikTok Catalog CSV Headers (Standard 45 columns)

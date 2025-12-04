@@ -13,7 +13,7 @@ import { formatPrice } from "@/lib/currency";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { calculateSalePrice } from "@/lib/saleUtils";
 import { Badge } from "@/components/ui/badge";
-import { trackAddToCart as trackMetaAddToCart } from "@/lib/metaPixel";
+import { trackAddToCart as trackMetaAddToCart, trackViewContent as trackMetaViewContent } from "@/lib/metaPixel";
 import { trackViewContent, trackAddToCart as trackTikTokAddToCart } from "@/lib/tiktokPixel";
 import { trackEvent } from "@/hooks/useAnalytics";
 import { SEOHead } from "@/components/SEOHead";
@@ -350,6 +350,7 @@ const ProductDetail = ({ key }: { key?: string }) => {
   useEffect(() => {
     if (product) {
       trackViewContent(product.id, product.name, finalPrice);
+      trackMetaViewContent(product.id, product.name, finalPrice);
     }
   }, [product, finalPrice]);
 
