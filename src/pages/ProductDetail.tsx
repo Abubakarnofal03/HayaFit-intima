@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Minus, Plus, ShoppingCart, X, Star, ShieldCheck, Truck, Banknote, Package } from "lucide-react";
+import { Minus, Plus, ShoppingCart, X, Star, ShieldCheck, Truck, Banknote, Package, Lock, Eye, Clock } from "lucide-react";
 import { addToGuestCart } from "@/lib/cartUtils";
 import { formatPrice } from "@/lib/currency";
 import { LoadingScreen } from "@/components/LoadingScreen";
@@ -40,6 +40,11 @@ const ProductDetail = ({ key }: { key?: string }) => {
 
   // Simulate real-time activity for social proof
   const [recentPurchases] = useState(() => Math.floor(Math.random() * 24) + 6); // 6-29 purchases
+  const [currentViewers] = useState(() => Math.floor(Math.random() * 15) + 5); // 5-19 viewers
+  const [lastOrderTime] = useState(() => {
+    const minutes = Math.floor(Math.random() * 6) + 5; // 5-10 minutes ago
+    return minutes;
+  });
 
   // Reset component state when slug changes
   useEffect(() => {
@@ -532,16 +537,69 @@ const ProductDetail = ({ key }: { key?: string }) => {
                     <span className="text-sm text-muted-foreground">(4.8/5 based on {recentPurchases} reviews)</span>
                   </div>
 
-                  {/* Price */}
-                  <div className="flex items-baseline gap-3">
-                    <span className="text-3xl md:text-4xl font-bold text-primary">
-                      {formatPrice(finalPrice * quantity)}
-                    </span>
-                    {discount && (
-                      <span className="text-xl text-muted-foreground line-through decoration-destructive/30">
-                        {formatPrice(displayPrice * quantity)}
+                  {/* Price with Discreet Packaging Badge */}
+                  <div className="space-y-3">
+                    <div className="flex items-baseline gap-3">
+                      <span className="text-3xl md:text-4xl font-bold text-primary">
+                        {formatPrice(finalPrice * quantity)}
                       </span>
-                    )}
+                      {discount && (
+                        <span className="text-xl text-muted-foreground line-through decoration-destructive/30">
+                          {formatPrice(displayPrice * quantity)}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Discreet Packaging - Critical for intimates */}
+                    <div className="inline-flex items-center gap-2 bg-primary/5 border border-primary/20 rounded-md px-3 py-2">
+                      <Lock className="h-4 w-4 text-primary" />
+                      <div className="flex flex-col">
+                        <span className="text-xs font-bold text-primary uppercase tracking-wide">Discreet Packaging</span>
+                        <span className="text-xs text-muted-foreground">Plain box • No branding • Complete privacy</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Real-Time Activity & Stock Alerts */}
+                <div className="space-y-2">
+                  {/* Low Stock Warning */}
+                  {(() => {
+                    const currentStock = selectedColor
+                      ? selectedColor.quantity
+                      : selectedVariation
+                        ? selectedVariation.quantity
+                        : selectedSize
+                          ? selectedSize.quantity
+                          : product.stock_quantity;
+
+                    if (currentStock > 0 && currentStock <= 10) {
+                      return (
+                        <div className="bg-orange-500/10 border border-orange-500/30 rounded-md px-3 py-2.5 flex items-center gap-2 animate-pulse">
+                          <Package className="h-4 w-4 text-orange-600" />
+                          <span className="text-sm font-semibold text-orange-700">
+                            ⚡ Only {currentStock} left in stock!
+                          </span>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
+
+                  {/* Real-Time Social Proof */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-secondary/30 border border-border/50 rounded-md px-3 py-2 flex items-center gap-2">
+                      <Eye className="h-3.5 w-3.5 text-primary animate-pulse" />
+                      <span className="text-xs font-medium">
+                        <span className="font-bold text-primary">{currentViewers}</span> viewing now
+                      </span>
+                    </div>
+                    <div className="bg-secondary/30 border border-border/50 rounded-md px-3 py-2 flex items-center gap-2">
+                      <Clock className="h-3.5 w-3.5 text-green-600" />
+                      <span className="text-xs font-medium">
+                        Last order <span className="font-bold text-green-600">{lastOrderTime} min ago</span>
+                      </span>
+                    </div>
                   </div>
                 </div>
 
@@ -571,15 +629,29 @@ const ProductDetail = ({ key }: { key?: string }) => {
                             onClick={() => {
                               setSelectedVariation(v);
                             }}
-                            className={`min-w-[4rem] px-4 py-2 text-sm border rounded-sm transition-all ${selectedVariation?.id === v.id
-                              ? "border-primary bg-primary text-primary-foreground shadow-md"
-                              : "border-input hover:border-primary/50 hover:bg-accent"
+                            disabled={v.quantity === 0}
+                            className={`min-w-[4rem] px-4 py-2 text-sm border rounded-sm transition-all relative ${v.quantity === 0
+                              ? "opacity-50 cursor-not-allowed bg-muted"
+                              : selectedVariation?.id === v.id
+                                ? "border-primary bg-primary text-primary-foreground shadow-md"
+                                : "border-input hover:border-primary/50 hover:bg-accent"
                               }`}
                           >
-                            {v.name}
+                            <span className={v.quantity === 0 ? "line-through" : ""}>{v.name}</span>
+                            {v.quantity === 0 && (
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <X className="h-5 w-5 text-destructive" />
+                              </div>
+                            )}
                           </button>
                         ))}
                       </div>
+                      {selectedVariation && selectedVariation.quantity === 0 && (
+                        <div className="bg-destructive/10 border border-destructive/30 rounded-md px-3 py-2 flex items-center gap-2">
+                          <X className="h-4 w-4 text-destructive" />
+                          <span className="text-sm font-semibold text-destructive">Out of Stock</span>
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -596,15 +668,29 @@ const ProductDetail = ({ key }: { key?: string }) => {
                             onClick={() => {
                               setSelectedSize(s);
                             }}
-                            className={`min-w-[3rem] px-3 py-2 text-sm border rounded-sm transition-all ${selectedSize?.id === s.id
-                              ? "border-primary bg-primary text-primary-foreground shadow-md"
-                              : "border-input hover:border-primary/50 hover:bg-accent"
+                            disabled={s.quantity === 0}
+                            className={`min-w-[3rem] px-3 py-2 text-sm border rounded-sm transition-all relative ${s.quantity === 0
+                              ? "opacity-50 cursor-not-allowed bg-muted"
+                              : selectedSize?.id === s.id
+                                ? "border-primary bg-primary text-primary-foreground shadow-md"
+                                : "border-input hover:border-primary/50 hover:bg-accent"
                               }`}
                           >
-                            {s.name}
+                            <span className={s.quantity === 0 ? "line-through" : ""}>{s.name}</span>
+                            {s.quantity === 0 && (
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <X className="h-5 w-5 text-destructive" />
+                              </div>
+                            )}
                           </button>
                         ))}
                       </div>
+                      {selectedSize && selectedSize.quantity === 0 && (
+                        <div className="bg-destructive/10 border border-destructive/30 rounded-md px-3 py-2 flex items-center gap-2">
+                          <X className="h-4 w-4 text-destructive" />
+                          <span className="text-sm font-semibold text-destructive">Out of Stock</span>
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -619,15 +705,30 @@ const ProductDetail = ({ key }: { key?: string }) => {
                           <button
                             key={c.id}
                             onClick={() => setSelectedColor(c)}
-                            className={`w-10 h-10 rounded-full border-2 transition-all ${selectedColor?.id === c.id
-                              ? "border-primary ring-1 ring-primary ring-offset-2 scale-110"
-                              : "border-transparent hover:scale-105"
+                            disabled={c.quantity === 0}
+                            className={`w-10 h-10 rounded-full border-2 transition-all relative ${c.quantity === 0
+                              ? "opacity-40 cursor-not-allowed"
+                              : selectedColor?.id === c.id
+                                ? "border-primary ring-1 ring-primary ring-offset-2 scale-110"
+                                : "border-transparent hover:scale-105"
                               }`}
                             style={{ backgroundColor: c.color_code }}
-                            title={c.name}
-                          />
+                            title={`${c.name}${c.quantity === 0 ? ' - Out of Stock' : ''}`}
+                          >
+                            {c.quantity === 0 && (
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <X className="h-6 w-6 text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]" strokeWidth={3} />
+                              </div>
+                            )}
+                          </button>
                         ))}
                       </div>
+                      {selectedColor && selectedColor.quantity === 0 && (
+                        <div className="bg-destructive/10 border border-destructive/30 rounded-md px-3 py-2 flex items-center gap-2">
+                          <X className="h-4 w-4 text-destructive" />
+                          <span className="text-sm font-semibold text-destructive">Out of Stock</span>
+                        </div>
+                      )}
                     </div>
                   )}
 

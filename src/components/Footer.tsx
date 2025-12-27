@@ -45,12 +45,12 @@ export const Footer = () => {
           <div>
             <h4 className="font-semibold mb-4">Shop by Category</h4>
             <ul className="space-y-2 text-sm">
-              <li><Link to="/shop?category=home-decor" onClick={handleLinkClick} className="hover:text-accent transition-colors">Home Decor</Link></li>
-              <li><Link to="/shop?category=furniture" onClick={handleLinkClick} className="hover:text-accent transition-colors">Furniture</Link></li>
-              <li><Link to="/shop?category=mens-wallets" onClick={handleLinkClick} className="hover:text-accent transition-colors">Men's Wallets</Link></li>
-              <li><Link to="/shop?category=womens-wallets" onClick={handleLinkClick} className="hover:text-accent transition-colors">Women's Wallets</Link></li>
-              <li><Link to="/shop?category=accessories" onClick={handleLinkClick} className="hover:text-accent transition-colors">Accessories</Link></li>
-              <li><Link to="/shop?category=garden-decorations" onClick={handleLinkClick} className="hover:text-accent transition-colors">Garden Decorations</Link></li>
+              <li><Link to="/shop?category=bras" onClick={handleLinkClick} className="hover:text-accent transition-colors">Bras</Link></li>
+              <li><Link to="/shop?category=panties" onClick={handleLinkClick} className="hover:text-accent transition-colors">Panties</Link></li>
+              <li><Link to="/shop?category=lingerie-sets" onClick={handleLinkClick} className="hover:text-accent transition-colors">Lingerie Sets</Link></li>
+              <li><Link to="/shop?category=nightwear" onClick={handleLinkClick} className="hover:text-accent transition-colors">Nightwear</Link></li>
+              <li><Link to="/shop?category=shapewear" onClick={handleLinkClick} className="hover:text-accent transition-colors">Shapewear</Link></li>
+              <li><Link to="/shop?category=accessories" onClick={handleLinkClick} className="hover:text-accent transition-colors">Intimate Accessories</Link></li>
             </ul>
           </div>
           <div>

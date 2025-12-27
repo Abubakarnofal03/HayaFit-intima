@@ -10,7 +10,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ShoppingCart, Star, SlidersHorizontal } from "lucide-react";
+import { ShoppingCart, Star, SlidersHorizontal, Grid3x3, List } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { addToGuestCart } from "@/lib/cartUtils";
 import { formatPrice } from "@/lib/currency";
@@ -49,6 +49,7 @@ const Shop = () => {
     const [user, setUser] = useState<any>(null);
     const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const { toast } = useToast();
     const queryClient = useQueryClient();
 
@@ -120,6 +121,31 @@ const Shop = () => {
             return { products: data, count };
         },
         enabled: !!categories,
+    });
+
+    // Fetch all product colors and sizes for display on cards
+    const { data: allProductColors } = useQuery({
+        queryKey: ['all-product-colors'],
+        queryFn: async () => {
+            const { data, error } = await supabase
+                .from('product_colors')
+                .select('id, product_id, name, color_code, sort_order')
+                .order('sort_order');
+            if (error) throw error;
+            return data;
+        },
+    });
+
+    const { data: allProductSizes } = useQuery({
+        queryKey: ['all-product-sizes'],
+        queryFn: async () => {
+            const { data, error } = await supabase
+                .from('product_sizes')
+                .select('id, product_id, name, sort_order')
+                .order('sort_order');
+            if (error) throw error;
+            return data;
+        },
     });
 
     const products = productsData?.products;
@@ -460,77 +486,158 @@ const Shop = () => {
 
                                 {/* Products Grid */}
                                 <div className="col-span-1 lg:col-span-3">
+                                    {/* Top Bar with View Toggle and Product Count */}
+                                    <div className="flex items-center justify-between mb-6">
+                                        <p className="text-sm text-muted-foreground font-medium">
+                                            {totalCount} {totalCount === 1 ? 'product' : 'products'}
+                                        </p>
+                                        <div className="flex items-center gap-2">
+                                            <Button
+                                                variant={viewMode === 'grid' ? 'default' : 'outline'}
+                                                size="sm"
+                                                onClick={() => setViewMode('grid')}
+                                                className="h-9 w-9 p-0"
+                                            >
+                                                <Grid3x3 className="h-4 w-4" />
+                                            </Button>
+                                            <Button
+                                                variant={viewMode === 'list' ? 'default' : 'outline'}
+                                                size="sm"
+                                                onClick={() => setViewMode('list')}
+                                                className="h-9 w-9 p-0"
+                                            >
+                                                <List className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    </div>
+
                                     {products?.length === 0 ? (
                                         <div className="text-center py-12">
                                             <p className="text-muted-foreground">No products found with the selected filters.</p>
                                         </div>
                                     ) : (
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                                        <div className={`grid gap-4 md:gap-6 ${viewMode === 'grid' ? 'grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
                                             {products?.map((product) => {
                                                 const productSale = sales?.find(s => s.product_id === product.id);
                                                 const globalSale = sales?.find(s => s.is_global);
                                                 const { finalPrice, discount } = calculateSalePrice(product.price, productSale, globalSale);
 
+                                                // Get colors and sizes for this product
+                                                const productColors = allProductColors?.filter(c => c.product_id === product.id) || [];
+                                                const productSizes = allProductSizes?.filter(s => s.product_id === product.id) || [];
+
+                                                // Show first 3 colors, hide rest
+                                                const displayedColors = productColors.slice(0, 3);
+                                                const remainingColors = productColors.length - 3;
+
                                                 return (
                                                     <Link key={product.id} to={`/product/${product.slug}`} className="block transition-all duration-300 active:scale-95">
-                                                        <Card className="glass-card glass-hover overflow-hidden rounded-xl group relative cursor-pointer">
+                                                        <Card className="glass-card glass-hover overflow-hidden rounded-xl group relative cursor-pointer border-border/50">
+                                                            {/* Elegant Discount Badge */}
                                                             {discount && (
-                                                                <Badge className="absolute top-2 left-2 z-10 bg-destructive text-destructive-foreground">
+                                                                <Badge className="absolute top-3 left-3 z-10 bg-rose-100 text-rose-700 border border-rose-200 shadow-sm rounded-sm px-2 py-0.5 text-xs font-semibold">
                                                                     {discount}% OFF
                                                                 </Badge>
                                                             )}
                                                             {product.is_featured && !discount && (
-                                                                <Badge className="absolute top-2 left-2 z-10 bg-accent text-accent-foreground">
+                                                                <Badge className="absolute top-3 left-3 z-10 bg-accent/80 text-accent-foreground backdrop-blur-sm shadow-sm rounded-sm px-2 py-0.5 text-xs">
                                                                     <Star className="h-3 w-3 mr-1" fill="currentColor" />
                                                                     Featured
                                                                 </Badge>
                                                             )}
-                                                            <div className="aspect-square bg-muted relative overflow-hidden">
+
+                                                            {/* Product Image */}
+                                                            <div className="aspect-square bg-muted/30 relative overflow-hidden">
                                                                 {product.images?.[0] && (
                                                                     <img
                                                                         src={product.images[0]}
                                                                         alt={product.name}
-                                                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                                                     />
                                                                 )}
                                                             </div>
-                                                            <CardContent className="p-3 md:p-4">
-                                                                <p className="text-xs text-muted-foreground mb-1 truncate">
+
+                                                            <CardContent className="p-4 space-y-3">
+                                                                {/* Category */}
+                                                                <p className="text-xs text-muted-foreground uppercase tracking-wide truncate">
                                                                     {product.categories?.name}
                                                                 </p>
-                                                                <h3 className="font-display text-base md:text-lg font-semibold mb-1 md:mb-2 truncate">
+
+                                                                {/* Product Name */}
+                                                                <h3 className="font-display text-base md:text-lg font-semibold line-clamp-2 leading-snug">
                                                                     {product.name}
                                                                 </h3>
-                                                                {product.sku && (
-                                                                    <p className="text-xs text-muted-foreground mb-1">
-                                                                        SKU: {product.sku}
-                                                                    </p>
+
+                                                                {/* Color Swatches */}
+                                                                {productColors.length > 0 && (
+                                                                    <div className="flex items-center gap-2 pt-1">
+                                                                        {displayedColors.map((color) => (
+                                                                            <div
+                                                                                key={color.id}
+                                                                                className="w-6 h-6 rounded-full border-2 border-border shadow-sm transition-transform hover:scale-110"
+                                                                                style={{ backgroundColor: color.color_code }}
+                                                                                title={color.name}
+                                                                            />
+                                                                        ))}
+                                                                        {remainingColors > 0 && (
+                                                                            <span className="text-xs text-muted-foreground ml-1">
+                                                                                +{remainingColors} more
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
                                                                 )}
-                                                                <div className="mb-1 md:mb-2">
+
+                                                                {/* Price */}
+                                                                <div className="flex items-baseline gap-2">
                                                                     {discount ? (
-                                                                        <div className="flex items-center gap-2">
-                                                                            <p className="text-lg md:text-xl font-bold text-destructive">
+                                                                        <>
+                                                                            <p className="text-xl font-bold text-rose-600">
                                                                                 {formatPrice(finalPrice)}
                                                                             </p>
                                                                             <p className="text-sm text-muted-foreground line-through">
                                                                                 {formatPrice(product.price)}
                                                                             </p>
-                                                                        </div>
+                                                                        </>
                                                                     ) : (
-                                                                        <p className="text-lg md:text-xl font-bold text-accent">
+                                                                        <p className="text-xl font-bold text-foreground">
                                                                             {formatPrice(product.price)}
                                                                         </p>
                                                                     )}
                                                                 </div>
+
+                                                                {/* Sale Badge */}
+                                                                {discount && (
+                                                                    <Badge variant="outline" className="text-xs border-rose-200 text-rose-700 bg-rose-50">
+                                                                        Sale
+                                                                    </Badge>
+                                                                )}
+
+                                                                {/* Size Options */}
+                                                                {productSizes.length > 0 && (
+                                                                    <div className="flex flex-wrap gap-1.5 pt-1">
+                                                                        {productSizes.slice(0, 5).map((size) => (
+                                                                            <span
+                                                                                key={size.id}
+                                                                                className="px-2 py-0.5 text-xs border border-border rounded-sm bg-background/50"
+                                                                            >
+                                                                                {size.name}
+                                                                            </span>
+                                                                        ))}
+                                                                    </div>
+                                                                )}
+
+                                                                {/* Stock Status */}
                                                                 {product.stock_quantity !== undefined && product.stock_quantity < 10 && product.stock_quantity > 0 && (
-                                                                    <p className="text-xs text-orange-500 mb-2">
+                                                                    <p className="text-xs text-orange-500">
                                                                         Only {product.stock_quantity} left in stock!
                                                                     </p>
                                                                 )}
                                                                 {product.stock_quantity === 0 && (
-                                                                    <p className="text-xs text-destructive mb-2">Out of stock</p>
+                                                                    <p className="text-xs text-destructive">Out of stock</p>
                                                                 )}
-                                                                <div className="grid grid-cols-2 gap-2">
+
+                                                                {/* Action Buttons */}
+                                                                <div className="grid grid-cols-2 gap-2 pt-2">
                                                                     <Button
                                                                         variant="outline"
                                                                         size="sm"
@@ -540,7 +647,7 @@ const Shop = () => {
                                                                             addToCart.mutate(product);
                                                                         }}
                                                                         disabled={addToCart.isPending || product.stock_quantity === 0}
-                                                                        className="text-xs md:text-sm"
+                                                                        className="text-xs md:text-sm border-primary/30 hover:bg-primary/5"
                                                                     >
                                                                         <ShoppingCart className="h-3 w-3 md:h-4 md:w-4" />
                                                                     </Button>

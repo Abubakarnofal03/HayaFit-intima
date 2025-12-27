@@ -617,8 +617,77 @@ const Admin = () => {
 
   const deleteItem = useMutation({
     mutationFn: async ({ type, id }: { type: string; id: string }) => {
-      const { error } = await supabase.from(type as any).delete().eq('id', id);
-      if (error) throw error;
+      // Special handling for products - delete related records first
+      if (type === 'products') {
+        // Step 0: Nullify references in order_items to preserve order history
+        // Get all order items for this product
+        const { data: orderItems } = await supabase
+          .from('order_items')
+          .select('id')
+          .eq('product_id', id);
+
+        if (orderItems && orderItems.length > 0) {
+          const orderItemIds = orderItems.map(item => item.id);
+
+          // Nullify foreign key references
+          const { error: updateError } = await supabase
+            .from('order_items')
+            .update({
+              variation_id: null,
+              variation_name: null,
+              variation_price: null,
+              color_id: null,
+              color_name: null,
+              color_price: null,
+              color_code: null,
+              size_id: null,
+              size_name: null,
+              size_price: null
+            })
+            .in('id', orderItemIds);
+
+          if (updateError) console.warn('Error updating order items:', updateError);
+        }
+
+        // Step 1: Delete reviews
+        const { error: reviewsError } = await supabase
+          .from('reviews')
+          .delete()
+          .eq('product_id', id);
+        if (reviewsError) console.warn('Error deleting reviews:', reviewsError);
+
+        // Step 2: Delete product variations
+        const { error: variationsError } = await supabase
+          .from('product_variations')
+          .delete()
+          .eq('product_id', id);
+        if (variationsError) console.warn('Error deleting variations:', variationsError);
+
+        // Step 3: Delete product colors
+        const { error: colorsError } = await supabase
+          .from('product_colors')
+          .delete()
+          .eq('product_id', id);
+        if (colorsError) console.warn('Error deleting colors:', colorsError);
+
+        // Step 4: Delete product sizes
+        const { error: sizesError } = await supabase
+          .from('product_sizes')
+          .delete()
+          .eq('product_id', id);
+        if (sizesError) console.warn('Error deleting sizes:', sizesError);
+
+        // Step 5: Now delete the product itself
+        const { error: productError } = await supabase
+          .from('products')
+          .delete()
+          .eq('id', id);
+        if (productError) throw productError;
+      } else {
+        // For other types, just delete directly
+        const { error } = await supabase.from(type as any).delete().eq('id', id);
+        if (error) throw error;
+      }
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: [`admin-${variables.type}`] });
