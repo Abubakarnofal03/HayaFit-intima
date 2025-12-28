@@ -55,13 +55,13 @@ const OrderConfirmation = () => {
       // Check if this order has already been tracked in this session
       const trackedOrders = sessionStorage.getItem('tracked_orders');
       const trackedOrderIds = trackedOrders ? JSON.parse(trackedOrders) : [];
-      
+
       if (!trackedOrderIds.includes(order.id)) {
         hasTrackedPurchase.current = true;
-        
+
         // Track Meta Pixel Purchase
         trackMetaPurchase(order.total_amount, 'PKR', order.id);
-        
+
         // Track TikTok Pixel CompletePayment
         const tiktokItems = orderItems.map(item => ({
           id: item.product_id,
@@ -69,7 +69,7 @@ const OrderConfirmation = () => {
           price: item.price || 0,
         }));
         trackCompletePayment(order.id, order.total_amount, tiktokItems);
-        
+
         // Mark this order as tracked
         trackedOrderIds.push(order.id);
         sessionStorage.setItem('tracked_orders', JSON.stringify(trackedOrderIds));
@@ -107,7 +107,7 @@ const OrderConfirmation = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      
+
       <main className="flex-1 py-12">
         <div className="container mx-auto px-4 max-w-3xl">
           <div className="text-center mb-8">
@@ -121,7 +121,7 @@ const OrderConfirmation = () => {
           <Card className="mb-6">
             <CardContent className="p-6">
               <h2 className="font-display text-2xl font-bold mb-4">Order Details</h2>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div>
                   <p className="text-sm text-muted-foreground">Order Number</p>
@@ -159,7 +159,7 @@ const OrderConfirmation = () => {
           <Card className="mb-6">
             <CardContent className="p-6">
               <h2 className="font-display text-2xl font-bold mb-4">Order Items</h2>
-              
+
               <div className="space-y-4">
                 {orderItems?.map((item) => (
                   <div key={item.id} className="flex justify-between items-center">
@@ -167,13 +167,28 @@ const OrderConfirmation = () => {
                       {item.products?.images?.[0] && (
                         <img
                           src={item.products.images[0]}
-                          alt={item.products.name}
+                          alt={item.product_name || item.products?.name || 'Product'}
                           className="w-16 h-16 object-cover rounded"
                         />
                       )}
                       <div>
-                        <p className="font-semibold">{item.products?.name}</p>
+                        <p className="font-semibold">{item.product_name || item.products?.name || 'Deleted Product'}</p>
                         <p className="text-sm text-muted-foreground">Quantity: {item.quantity}</p>
+                        {item.variation_name && (
+                          <p className="text-xs text-muted-foreground">
+                            {item.variation_name}
+                          </p>
+                        )}
+                        {item.color_name && (
+                          <p className="text-xs text-muted-foreground">
+                            Color: {item.color_name}
+                          </p>
+                        )}
+                        {item.size_name && (
+                          <p className="text-xs text-muted-foreground">
+                            Size: {item.size_name}
+                          </p>
+                        )}
                       </div>
                     </div>
                     <p className="font-semibold">

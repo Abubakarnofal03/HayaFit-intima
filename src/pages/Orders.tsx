@@ -63,7 +63,7 @@ const Orders = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      
+
       <main className="flex-1 py-12">
         <div className="container mx-auto px-4">
           <h1 className="font-display text-4xl font-bold mb-8 text-center gold-accent pb-8">
@@ -100,9 +100,26 @@ const Orders = () => {
                         <div className="space-y-2">
                           {order.order_items?.map((item: any) => (
                             <div key={item.id} className="flex justify-between text-sm">
-                              <span>
-                                {item.products?.name} x {item.quantity}
-                              </span>
+                              <div className="flex-1">
+                                <div>
+                                  {item.product_name || item.products?.name || 'Deleted Product'} x {item.quantity}
+                                </div>
+                                {item.variation_name && (
+                                  <div className="text-xs text-muted-foreground">
+                                    {item.variation_name}
+                                  </div>
+                                )}
+                                {item.color_name && (
+                                  <div className="text-xs text-muted-foreground">
+                                    Color: {item.color_name}
+                                  </div>
+                                )}
+                                {item.size_name && (
+                                  <div className="text-xs text-muted-foreground">
+                                    Size: {item.size_name}
+                                  </div>
+                                )}
+                              </div>
                               <span>{formatPrice(item.price * item.quantity)}</span>
                             </div>
                           ))}

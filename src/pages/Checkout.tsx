@@ -269,6 +269,9 @@ const Checkout = () => {
           : (item.color_price || item.variation_price || item.size_price || item.product_price);
         const productId = user ? item.product_id : item.product_id;
 
+        // Get product name - store it to preserve order history
+        const productName = user ? item.products?.name : item.product_name;
+
         // Apply sales when storing order items
         const productSale = activeSales?.find(
           sale => !sale.is_global && sale.product_id === productId
@@ -279,6 +282,7 @@ const Checkout = () => {
         return {
           order_id: order.id,
           product_id: productId,
+          product_name: productName, // Store product name for order history preservation
           quantity: item.quantity,
           price: finalPrice,
           variation_id: item.variation_id || null,

@@ -35,6 +35,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import * as XLSX from 'xlsx';
+import { OrderListItem } from "@/components/admin/OrderListItem";
+import { OrderDetailCard } from "@/components/admin/OrderDetailCard";
 
 // Format phone number for WhatsApp
 const formatPhoneForWhatsApp = (phone: string): string => {
@@ -143,6 +145,7 @@ const Admin = () => {
   const [ordersPage, setOrdersPage] = useState(1);
   const [ordersPageSize, setOrdersPageSize] = useState<number | 'all'>(50);
   const [showPageSizeDialog, setShowPageSizeDialog] = useState(false);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
 
   // If a filter/search is active, switch to "all" to ensure client-side filtering
   // Do NOT automatically revert back; let the user control page size selection.
@@ -290,7 +293,7 @@ const Admin = () => {
     queryFn: async () => {
       let query = supabase
         .from('orders')
-        .select('*, order_items(*, products(*, product_variations(*)))', { count: 'exact' })
+        .select('id, order_number, status, created_at, first_name, last_name, phone, shipping_city, total_amount', { count: 'exact' })
         .order('created_at', { ascending: false });
 
       // Only apply pagination if not "all"
@@ -386,6 +389,7 @@ const Admin = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['order-detail'] });
       toast({ title: "Order status updated" });
     },
   });
@@ -415,6 +419,7 @@ const Admin = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['order-detail'] });
       toast({ title: "Note updated" });
       setEditingNote(null);
     },
@@ -430,6 +435,7 @@ const Admin = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['order-detail'] });
       toast({ title: "Customer confirmation updated" });
       setEditingCustomerConfirmation(null);
     },
@@ -445,6 +451,7 @@ const Admin = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['order-detail'] });
       toast({ title: "Courier company updated" });
       setEditingCourierCompany(null);
     },
@@ -460,6 +467,7 @@ const Admin = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['order-detail'] });
       toast({ title: "Shipping address updated" });
       setEditingAddress(null);
     },
@@ -475,6 +483,7 @@ const Admin = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['order-detail'] });
       toast({ title: 'City updated' });
       setEditingCity(null);
     },
@@ -490,6 +499,7 @@ const Admin = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['order-detail'] });
       toast({ title: "Phone number updated" });
       setEditingPhone(null);
     },
@@ -576,6 +586,7 @@ const Admin = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['order-detail'] });
       toast({ title: "Order item updated" });
       setEditingOrderItem(null);
     },
@@ -611,6 +622,7 @@ const Admin = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['order-detail'] });
       toast({ title: "Order item deleted" });
     },
   });
@@ -619,8 +631,8 @@ const Admin = () => {
     mutationFn: async ({ type, id }: { type: string; id: string }) => {
       // Special handling for products - delete related records first
       if (type === 'products') {
-        // Step 0: Nullify references in order_items to preserve order history
-        // Get all order items for this product
+        // Step 0: Nullify foreign key IDs in order_items to prevent constraint violations
+        // IMPORTANT: We keep the _name and _price fields intact for order history!
         const { data: orderItems } = await supabase
           .from('order_items')
           .select('id')
@@ -629,20 +641,16 @@ const Admin = () => {
         if (orderItems && orderItems.length > 0) {
           const orderItemIds = orderItems.map(item => item.id);
 
-          // Nullify foreign key references
+          // Only nullify the ID fields, keep names/prices for historical data
           const { error: updateError } = await supabase
             .from('order_items')
             .update({
-              variation_id: null,
-              variation_name: null,
-              variation_price: null,
-              color_id: null,
-              color_name: null,
-              color_price: null,
-              color_code: null,
-              size_id: null,
-              size_name: null,
-              size_price: null
+              product_id: null,  // Nullify foreign key
+              variation_id: null,  // Nullify foreign key
+              color_id: null,  // Nullify foreign key
+              size_id: null,  // Nullify foreign key
+              // Keep these for history: product_name, variation_name, variation_price, 
+              // color_name, color_code, color_price, size_name, size_price
             })
             .in('id', orderItemIds);
 
@@ -1373,7 +1381,41 @@ const Admin = () => {
                 </div>
               ) : null}
 
-              {filteredOrders.map((order, index) => (
+              <div className="space-y-3">
+                {filteredOrders.map((order) => (
+                  <OrderListItem
+                    key={order.id}
+                    order={order}
+                    isSelected={selectedOrders.has(order.id)}
+                    onSelect={toggleOrderSelection}
+                    onStatusChange={(orderId, status) => updateOrderStatus.mutate({ orderId, status })}
+                    onClick={(orderId) => setSelectedOrderId(orderId)}
+                  />
+                ))}
+              </div>
+
+              {/* Order Detail Sheet */}
+              <OrderDetailCard
+                orderId={selectedOrderId}
+                orderIds={filteredOrders.map(o => o.id)}
+                onClose={() => setSelectedOrderId(null)}
+                onNavigate={(orderId) => setSelectedOrderId(orderId)}
+                onStatusChange={(orderId, status) => updateOrderStatus.mutate({ orderId, status })}
+                onItemUpdate={(params) => updateOrderItem.mutate(params)}
+                onItemDelete={(params) => deleteOrderItem.mutate(params)}
+                onPhoneUpdate={(params) => updatePhone.mutate(params)}
+                onAddressUpdate={(params) => updateShippingAddress.mutate(params)}
+                onCityUpdate={(params) => updateShippingCity.mutate(params)}
+                onCourierUpdate={(params) => updateCourierCompany.mutate(params)}
+                onAdminNoteUpdate={(params) => updateAdminNote.mutate(params)}
+                onCustomerConfirmationUpdate={(params) => updateCustomerConfirmation.mutate(params)}
+                onWhatsAppClick={sendWhatsAppConfirmation}
+                productVariations={productVariations || []}
+                productColors={productColors || []}
+              />
+
+              {/* Keep the old collapsible section below for now - will remove next */}
+              {false && filteredOrders.map((order, index) => (
                 <Collapsible
                   key={order.id}
                   open={expandedOrders.has(order.id)}
