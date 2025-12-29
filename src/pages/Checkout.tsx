@@ -13,6 +13,7 @@ import { getGuestCart, clearGuestCart, GuestCartItem, updateGuestCartQuantity, r
 import { formatPrice } from "@/lib/currency";
 import { trackInitiateCheckout as trackMetaInitiateCheckout } from "@/lib/metaPixel";
 import { trackInitiateCheckout as trackTikTokInitiateCheckout } from "@/lib/tiktokPixel";
+import { trackStartCheckout } from "@/lib/snapchatPixel";
 import { trackEvent } from "@/hooks/useAnalytics";
 import { calculateSalePrice, Sale } from "@/lib/saleUtils";
 import { Trash2, Plus, Minus } from "lucide-react";
@@ -67,6 +68,14 @@ const Checkout = () => {
 
     // Track Meta Pixel InitiateCheckout event when user lands on checkout page
     trackMetaInitiateCheckout();
+
+    // Track Snapchat START_CHECKOUT event
+    trackStartCheckout({
+      price: 0, // Will be updated when cart loads
+      itemIds: [],
+      numberItems: 0,
+      paymentInfoAvailable: false, // COD only
+    });
 
     // Track analytics checkout start event
     trackEvent('checkout_start');

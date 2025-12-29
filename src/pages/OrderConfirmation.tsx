@@ -11,6 +11,7 @@ import { formatPrice } from "@/lib/currency";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { trackPurchase as trackMetaPurchase } from "@/lib/metaPixel";
 import { trackCompletePayment } from "@/lib/tiktokPixel";
+import { trackPurchase as trackSnapPurchase } from "@/lib/snapchatPixel";
 
 const OrderConfirmation = () => {
   const { orderId } = useParams();
@@ -69,6 +70,14 @@ const OrderConfirmation = () => {
           price: item.price || 0,
         }));
         trackCompletePayment(order.id, order.total_amount, tiktokItems);
+
+        // Track Snapchat Pixel Purchase
+        trackSnapPurchase({
+          price: order.total_amount,
+          transactionId: order.id,
+          itemIds: orderItems.map(item => item.product_id),
+          numberItems: orderItems.reduce((sum, item) => sum + item.quantity, 0),
+        });
 
         // Mark this order as tracked
         trackedOrderIds.push(order.id);

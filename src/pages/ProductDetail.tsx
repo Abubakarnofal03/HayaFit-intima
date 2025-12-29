@@ -15,6 +15,7 @@ import { calculateSalePrice } from "@/lib/saleUtils";
 import { Badge } from "@/components/ui/badge";
 import { trackAddToCart as trackMetaAddToCart, trackViewContent as trackMetaViewContent } from "@/lib/metaPixel";
 import { trackViewContent, trackAddToCart as trackTikTokAddToCart } from "@/lib/tiktokPixel";
+import { trackViewContent as trackSnapViewContent, trackAddToCart as trackSnapAddToCart } from "@/lib/snapchatPixel";
 import { trackEvent } from "@/hooks/useAnalytics";
 import { SEOHead } from "@/components/SEOHead";
 import { organizationSchema, productSchema, breadcrumbSchema } from "@/lib/structuredData";
@@ -292,6 +293,14 @@ const ProductDetail = ({ key }: { key?: string }) => {
 
       // Track TikTok Pixel AddToCart event
       trackTikTokAddToCart(product.id, product.name, finalPrice);
+
+      // Track Snapchat AddToCart event
+      trackSnapAddToCart({
+        price: finalPrice,
+        itemIds: [product.id],
+        category: product.categories?.name,
+        numberItems: quantity,
+      });
 
       // Track analytics event
       trackEvent('add_to_cart', {
