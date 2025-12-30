@@ -968,6 +968,9 @@ const Admin = () => {
         if (item.color_name) {
           itemDetail += ` - ${item.color_name}`;
         }
+        if (item.size_name) {
+          itemDetail += ` - ${item.size_name}`;
+        }
 
         return itemDetail;
       }).join('; ');
